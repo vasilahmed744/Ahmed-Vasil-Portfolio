@@ -152,7 +152,7 @@
     const publicEmail = data.contact.professionalEmail || data.contact.email;
     const emailAction = $("#email-action");
     emailAction.hidden = !publicEmail;
-    if (publicEmail) { emailAction.href = `mailto:${encodeURIComponent(publicEmail)}?subject=${encodeURIComponent(data.contact.emailSubject)}`; emailAction.textContent = "Email Ahmed"; }
+    if (publicEmail) { emailAction.href = `mailto:${publicEmail}`; emailAction.textContent = "Email Ahmed"; }
     const resumeAction = $("#resume-action");
     const hasResume = data.resume.enabled && isAsset(data.resume.file);
     resumeAction.hidden = !hasResume;

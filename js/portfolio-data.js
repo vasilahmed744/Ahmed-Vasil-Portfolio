@@ -48,7 +48,7 @@ window.PORTFOLIO_DATA = {
   contact: {
     // Leave blank until you have a professional public email. The email action hides automatically.
     email: "",
-    professionalEmail: "",
+    professionalEmail: "ahmedvasil744@gmail.com",
     location: "",
     emailSubject: "Portfolio enquiry"
   },
