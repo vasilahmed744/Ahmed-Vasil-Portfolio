@@ -64,10 +64,10 @@ window.PORTFOLIO_DATA = {
     x: { label: "X / Twitter", url: "" }
   },
   profileImage: {
-    // Set src to "assets/images/profile/ahmed-vasil.webp" after adding your real image.
-    // A supplied image is displayed without alteration; this initial avatar is used while empty.
-    src: "",
+    // A supplied image is displayed without alteration; the initials avatar is used on load failure.
+    src: "assets/images/profile/ahmed-vasil-profile.png.png",
     alt: "Ahmed Vasil",
+    position: "center center",
     fallbackInitials: "AV"
   },
   resume: {

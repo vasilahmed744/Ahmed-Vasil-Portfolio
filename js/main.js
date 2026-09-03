@@ -47,6 +47,7 @@
     photo.src = image.src;
     photo.alt = image.alt || data.person.name;
     photo.className = "profile-photo";
+    photo.style.objectPosition = image.position || "center center";
     photo.addEventListener("load", () => container.classList.add("has-photo"));
     photo.addEventListener("error", () => photo.remove());
     container.prepend(photo);
