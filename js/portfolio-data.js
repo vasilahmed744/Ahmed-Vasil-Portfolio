@@ -65,7 +65,7 @@ window.PORTFOLIO_DATA = {
   },
   profileImage: {
     // A supplied image is displayed without alteration; the initials avatar is used on load failure.
-    src: "assets/images/profile/ahmed-vasil-profile.png.png",
+    src: "assets/images/profile/ahmed-vasil-profile.png",
     alt: "Ahmed Vasil",
     position: "center center",
     fallbackInitials: "AV"
