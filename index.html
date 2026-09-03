@@ -4,167 +4,112 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#07111f" />
-    <meta name="description" content="Ahmed Vasil's cybersecurity portfolio: practical security labs, offensive-security projects, technical notes, and ongoing professional development." />
+    <!-- Keep title, description, canonical URL, Open Graph and JSON-LD in sync with js/portfolio-data.js > seo. -->
+    <meta name="description" content="Cybersecurity portfolio of Ahmed Vasil showcasing penetration-testing projects, offensive-security labs, web application security learning, CTF development and practical security work." />
     <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Ahmed Vasil | Cybersecurity Portfolio" />
-    <meta property="og:description" content="Practical security work, labs, technical notes, and career development." />
-    <meta property="og:image" content="assets/og-preview.svg" />
+    <meta property="og:site_name" content="Ahmed Vasil" />
+    <meta property="og:title" content="Ahmed Vasil | Penetration Testing &amp; Offensive Security Portfolio" />
+    <meta property="og:description" content="Cybersecurity portfolio of Ahmed Vasil showcasing penetration-testing projects, offensive-security labs, web application security learning, CTF development and practical security work." />
+    <meta property="og:url" content="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/" />
+    <meta property="og:image" content="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/assets/og-preview.svg" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="canonical" href="https://example.github.io/Ahmed-Vasil-Portfolio/" />
+    <meta name="twitter:title" content="Ahmed Vasil | Penetration Testing &amp; Offensive Security Portfolio" />
+    <meta name="twitter:description" content="Cybersecurity portfolio of Ahmed Vasil showcasing penetration-testing projects, offensive-security labs, web application security learning, CTF development and practical security work." />
+    <meta name="twitter:image" content="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/assets/og-preview.svg" />
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="css/styles.css" />
-    <title>Ahmed Vasil | Cybersecurity Portfolio</title>
+    <title>Ahmed Vasil | Penetration Testing &amp; Offensive Security Portfolio</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ahmed Vasil",
+        "url": "https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/",
+        "jobTitle": "Aspiring Penetration Tester",
+        "sameAs": [
+          "https://github.com/vasilahmed744",
+          "https://www.linkedin.com/in/ahamad-vasil-205590386"
+        ],
+        "knowsAbout": [
+          "Penetration Testing",
+          "Offensive Security",
+          "Web Application Security",
+          "Active Directory Security",
+          "Linux Security",
+          "Windows Security"
+        ]
+      }
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
-
     <header class="site-header" id="top">
       <nav class="nav container" aria-label="Primary navigation">
-        <a class="brand" href="#top" aria-label="Ahmed Vasil home">
-          <span class="brand-mark" aria-hidden="true">AV</span>
-          <span>AHMED <strong>VASIL</strong></span>
-        </a>
-        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu">
-          <span class="sr-only">Open navigation</span><span></span><span></span>
-        </button>
-        <div class="nav-links" id="primary-menu">
-          <a href="#about">About</a>
-          <a href="#projects">Projects</a>
-          <a href="#notes">Notes</a>
-          <a href="#toolkit">Toolkit</a>
-          <a class="nav-cta" href="#contact">Contact <span aria-hidden="true">↗</span></a>
-        </div>
+        <a class="brand" href="#top" aria-label="Portfolio home"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"></span></a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu"><span class="sr-only">Open navigation</span><span></span><span></span></button>
+        <div class="nav-links" id="primary-menu"></div>
       </nav>
     </header>
 
     <main id="main-content">
       <section class="hero section container" aria-labelledby="hero-title">
         <div class="hero-copy reveal">
-          <p class="eyebrow"><span class="pulse-dot"></span> Security practitioner · always learning</p>
-          <h1 id="hero-title">Breaking assumptions.<br /><em>Building</em> safer systems.</h1>
-          <p class="hero-intro">I’m Ahmed Vasil, a cybersecurity professional-in-progress documenting hands-on labs, ethical security research, and the craft of understanding how systems fail — responsibly.</p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#projects">Explore my work <span aria-hidden="true">↓</span></a>
-            <a class="text-link" href="#contact">Let’s connect <span aria-hidden="true">→</span></a>
-          </div>
+          <p class="eyebrow"><span class="pulse-dot"></span><span id="hero-eyebrow"></span></p>
+          <h1 id="hero-title"><span id="hero-title-lead"></span><br /><em id="hero-title-accent"></em><br /><span id="hero-title-end"></span></h1>
+          <p class="hero-intro" id="hero-summary"></p>
+          <div class="hero-actions"><a class="button button-primary" id="hero-primary" href="#projects"></a><a class="text-link" id="hero-secondary" href="#journey"></a></div>
         </div>
-        <div class="hero-terminal reveal" aria-label="Professional profile summary">
-          <div class="terminal-bar"><span></span><span></span><span></span><p>profile — ahmed@portfolio</p></div>
-          <div class="terminal-body">
-            <p><span class="syntax-key">const</span> <span class="syntax-var">practitioner</span> = {</p>
-            <p class="indent"><span class="syntax-prop">focus</span>: [<span class="syntax-string">"offensive security"</span>,</p>
-            <p class="indent-2"><span class="syntax-string">"web application security"</span>,</p>
-            <p class="indent-2"><span class="syntax-string">"security fundamentals"</span>],</p>
-            <p class="indent"><span class="syntax-prop">method</span>: <span class="syntax-string">"learn · test · document"</span>,</p>
-            <p class="indent"><span class="syntax-prop">status</span>: <span class="syntax-good">"open to opportunities"</span></p>
-            <p>};</p>
-            <p class="terminal-cursor"><span>›</span> <i></i></p>
-          </div>
-        </div>
+        <aside class="hero-profile reveal" aria-label="Professional profile">
+          <div class="profile-visual" id="profile-visual"></div>
+          <p class="eyebrow">Professional focus</p>
+          <h2 id="hero-role"></h2>
+          <ul class="focus-list" id="hero-focus"></ul>
+        </aside>
       </section>
 
-      <section class="proof-band" aria-label="Portfolio focus areas">
-        <div class="container proof-grid">
-          <div><strong>01</strong><span>Ethical<br />testing</span></div>
-          <div><strong>02</strong><span>Hands-on<br />learning</span></div>
-          <div><strong>03</strong><span>Clear<br />documentation</span></div>
-          <div><strong>04</strong><span>Continuous<br />growth</span></div>
-        </div>
-      </section>
+      <section class="proof-band" aria-label="Professional availability"><div class="container availability"><strong id="availability-label"></strong><span id="availability-detail"></span></div></section>
 
       <section class="section container" id="about" aria-labelledby="about-title">
-        <div class="section-heading reveal">
-          <p class="eyebrow">01 / About me</p>
-          <h2 id="about-title">Curiosity is the<br />starting point.</h2>
-        </div>
-        <div class="about-layout reveal">
-          <div class="about-copy">
-            <p class="large-copy">I’m drawn to the space where technical depth meets real-world impact: finding the weak assumption, tracing its path, and helping teams make the next decision with confidence.</p>
-            <p>This portfolio is a living record of my cybersecurity journey. It collects practical work completed only in authorised environments, the techniques I’m studying, and notes I write to turn learning into repeatable understanding.</p>
-            <p>My approach is methodical: establish scope, observe carefully, validate responsibly, and communicate findings in language that helps people act.</p>
-          </div>
-          <aside class="principles" aria-label="Working principles">
-            <p class="eyebrow">Operating principles</p>
-            <ol>
-              <li><span>01</span>Stay inside scope</li>
-              <li><span>02</span>Prove before claiming</li>
-              <li><span>03</span>Document with care</li>
-              <li><span>04</span>Keep learning publicly</li>
-            </ol>
-          </aside>
-        </div>
+        <div class="section-heading reveal"><p class="eyebrow" id="about-eyebrow"></p><h2 id="about-title"></h2></div>
+        <div class="about-layout reveal"><div class="about-copy"><p class="large-copy" id="about-lead"></p><div id="about-paragraphs"></div></div><aside class="principles" aria-label="Working principles"><p class="eyebrow">Operating principles</p><ol id="principles-list"></ol></aside></div>
       </section>
 
       <section class="section section-tint" id="projects" aria-labelledby="projects-title">
-        <div class="container">
-          <div class="section-heading row-heading reveal">
-            <div><p class="eyebrow">02 / Selected work</p><h2 id="projects-title">Hands-on, within scope.</h2></div>
-            <p class="heading-note">A curated view of authorised labs, practice environments, and portfolio-ready security work.</p>
-          </div>
-          <div class="filter-bar reveal" aria-label="Filter projects">
-            <button class="filter is-active" data-filter="all" type="button">All work</button>
-            <button class="filter" data-filter="web" type="button">Web security</button>
-            <button class="filter" data-filter="network" type="button">Network</button>
-            <button class="filter" data-filter="automation" type="button">Automation</button>
-          </div>
-          <div class="project-grid" id="project-grid" aria-live="polite"></div>
-          <noscript><p class="no-js">Enable JavaScript to view the project collection.</p></noscript>
-        </div>
+        <div class="container"><div class="section-heading row-heading reveal"><div><p class="eyebrow">Selected work</p><h2 id="projects-title">Hands-on, within scope.</h2></div><p class="heading-note">Public summaries of projects and authorised security learning. Sensitive implementation details stay private.</p></div><div class="filter-bar reveal" id="project-filters" aria-label="Filter projects"></div><div class="project-grid" id="project-grid" aria-live="polite"></div><noscript><p class="no-js">Enable JavaScript to view the portfolio content.</p></noscript></div>
       </section>
 
-      <section class="section container" id="notes" aria-labelledby="notes-title">
-        <div class="section-heading row-heading reveal">
-          <div><p class="eyebrow">03 / Technical notes</p><h2 id="notes-title">Learning, made useful.</h2></div>
-          <a class="text-link" href="#contact">Request a write-up <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="notes-grid" id="notes-grid"></div>
+      <section class="section container" id="skills" aria-labelledby="skills-title">
+        <div class="section-heading reveal"><p class="eyebrow">Skills and toolkit</p><h2 id="skills-title">Tools in context.</h2></div><p class="toolkit-intro reveal">A practical skills inventory without artificial ratings. Tools support the work; judgement, ethics, and clear reporting guide it.</p><div class="toolkit-grid" id="skills-grid"></div>
       </section>
 
-      <section class="section learning-section" aria-labelledby="learning-title">
-        <div class="container learning-layout">
-          <div class="reveal">
-            <p class="eyebrow">04 / Current direction</p>
-            <h2 id="learning-title">Skill-building is a daily practice.</h2>
-            <p>I’m developing practical fluency across offensive-security workflows, web application testing, networks, scripting, and clear security reporting.</p>
-          </div>
-          <div class="learning-list reveal" id="learning-list"></div>
-        </div>
+      <section class="section section-tint" id="labs" aria-labelledby="labs-title">
+        <div class="container"><div class="section-heading row-heading reveal"><div><p class="eyebrow">Labs and practical learning</p><h2 id="labs-title">Practice makes the methodology real.</h2></div><div class="platform-links" id="platform-links"></div></div><div class="notes-grid" id="labs-grid"></div></div>
       </section>
 
-      <section class="section container" id="toolkit" aria-labelledby="toolkit-title">
-        <div class="section-heading reveal"><p class="eyebrow">05 / Toolkit</p><h2 id="toolkit-title">Tools in context.</h2></div>
-        <p class="toolkit-intro reveal">Tools support the work; judgement, ethics, and communication guide it. The categories below reflect technologies I’m actively learning and using in authorised environments.</p>
-        <div class="toolkit-grid" id="toolkit-grid"></div>
+      <section class="section learning-section" id="journey" aria-labelledby="journey-title">
+        <div class="container"><div class="section-heading reveal"><p class="eyebrow">Professional journey</p><h2 id="journey-title">Learning with direction.</h2></div><div class="journey-grid"><section class="journey-block reveal" id="education-block" aria-labelledby="education-title"><h3 id="education-title">Education</h3><div class="timeline" id="education-list"></div></section><section class="journey-block reveal" id="training-block" aria-labelledby="training-title"><h3 id="training-title">Cybersecurity training</h3><div class="timeline" id="training-list"></div></section><section class="journey-block reveal" id="experience-block" aria-labelledby="experience-title"><h3 id="experience-title">Experience</h3><div class="timeline" id="experience-list"></div></section></div></div>
       </section>
 
-      <section class="section credential-section" aria-labelledby="credentials-title">
-        <div class="container credential-layout">
-          <div class="reveal"><p class="eyebrow">06 / Development log</p><h2 id="credentials-title">The next milestone is always in view.</h2></div>
-          <div class="timeline reveal" id="timeline"></div>
-        </div>
+      <section class="section container" id="certifications" aria-labelledby="certifications-title">
+        <div class="section-heading reveal"><p class="eyebrow">Certifications</p><h2 id="certifications-title">Verified learning.</h2></div><div class="certification-grid" id="certification-grid"></div>
+      </section>
+
+      <section class="section section-tint" id="writeups" aria-labelledby="writeups-title">
+        <div class="container"><div class="section-heading reveal"><p class="eyebrow">Technical write-ups</p><h2 id="writeups-title">Notes worth sharing.</h2></div><div class="notes-grid" id="writeups-grid"></div></div>
+      </section>
+
+      <section class="section container" id="achievements" aria-labelledby="achievements-title">
+        <div class="section-heading"><p class="eyebrow">Achievements</p><h2 id="achievements-title">Milestones.</h2></div><div class="notes-grid" id="achievements-grid"></div>
       </section>
 
       <section class="contact section container" id="contact" aria-labelledby="contact-title">
-        <p class="eyebrow reveal">07 / Contact</p>
-        <div class="contact-layout reveal">
-          <h2 id="contact-title">Have a security-minded<br /><em>conversation.</em></h2>
-          <div>
-            <p>I welcome conversations about entry-level roles, mentorship, ethical security work, and collaborative learning.</p>
-            <a class="button button-primary contact-button" href="mailto:your.email@example.com?subject=Portfolio%20enquiry">Email Ahmed <span aria-hidden="true">↗</span></a>
-            <p class="contact-note">Replace the placeholder email and social links in <code>js/portfolio-data.js</code> before publishing.</p>
-          </div>
-        </div>
+        <p class="eyebrow reveal">Contact</p><div class="contact-layout reveal"><h2 id="contact-title"></h2><div><p id="contact-copy"></p><p class="contact-location" id="contact-location"></p><div class="contact-actions"><a class="button button-primary" id="email-action" hidden></a><a class="button button-secondary" id="resume-action" hidden></a></div><div class="social-links" id="social-links" aria-label="Professional links"></div><p class="contact-note">Email, social links, profile photo, resume, and all portfolio content are managed in <code>js/portfolio-data.js</code>.</p></div></div>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">AV</span><span>AHMED <strong>VASIL</strong></span></a>
-        <p>Built with curiosity and respect for scope.</p>
-        <p>© <span id="year"></span> Ahmed Vasil.</p>
-      </div>
-    </footer>
+    <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"></span></a><p>Built with curiosity and respect for scope.</p><p>© <span id="year"></span> <span class="brand-name"></span>.</p></div></footer>
     <script src="js/portfolio-data.js"></script>
     <script src="js/main.js"></script>
   </body>

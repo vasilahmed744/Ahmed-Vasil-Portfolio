@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://example.github.io/Ahmed-Vasil-Portfolio/sitemap.xml
+Sitemap: https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/sitemap.xml
