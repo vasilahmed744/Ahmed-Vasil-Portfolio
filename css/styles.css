@@ -383,3 +383,90 @@ footer { margin-top: 60px; border-top: 1px solid var(--line-soft); background: v
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ---------- Walkthroughs ---------- */
+.tag {
+  display: inline-block; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--gold); background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  padding: 4px 11px; border-radius: 999px; margin-bottom: 10px;
+}
+.wt-card p.pages { font-size: 13.5px; color: var(--muted); margin-top: 12px; }
+.wt-card p.pages strong { color: var(--ink-soft); }
+.wt-content p { color: var(--ink-soft); margin: 10px 0; max-width: 780px; }
+.wt-content p:first-of-type { color: var(--ink); }
+.wt-content h2 { font-size: 24px; font-weight: 600; color: var(--navy-deep); margin: 30px 0 4px; }
+.wt-content h3 { font-size: 19px; font-weight: 600; color: var(--navy-deep); margin: 22px 0 4px; }
+.wt-content h2:first-child, .wt-content h3:first-child { margin-top: 0; }
+.wt-content ul, .wt-content ol { color: var(--ink-soft); margin: 10px 0 10px 20px; padding: 0; }
+.wt-content li { margin: 6px 0; line-height: 1.6; }
+.wt-content li strong { color: var(--ink); }
+.wt-content a { overflow-wrap: anywhere; }
+pre.code {
+  background: #0b2a45; color: #d9e8f4;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 13.5px; line-height: 1.65;
+  padding: 16px 18px; border-radius: 10px; margin: 14px 0;
+  overflow-x: auto; white-space: pre; tab-size: 4;
+  box-shadow: var(--shadow);
+}
+pre.code code { background: none; padding: 0; color: inherit; font-size: inherit; }
+.wt-content code.inline, .wt-table code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 13px; background: var(--surface-2);
+  padding: 2px 6px; border-radius: 5px; color: var(--navy-deep);
+  overflow-wrap: anywhere;
+}
+.flag-callout {
+  background: var(--gold-soft); border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold); border-radius: 10px;
+  padding: 16px 20px; margin: 18px 0;
+}
+.flag-callout .flag-label {
+  display: block; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--gold); margin-bottom: 6px;
+}
+.flag-callout code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 15px; font-weight: 700; color: var(--navy-deep);
+  overflow-wrap: anywhere; word-break: break-all;
+}
+.note {
+  background: var(--surface-2); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 14px 18px; margin: 16px 0;
+  font-size: 14.5px; color: var(--ink-soft); max-width: 780px;
+}
+.note strong { color: var(--ink); }
+.wt-table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 14px 0; }
+.wt-table th, .wt-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; color: var(--ink-soft); }
+.wt-table th { color: var(--navy-deep); font-weight: 700; white-space: nowrap; }
+.wt-table tr:last-child th, .wt-table tr:last-child td { border-bottom: none; }
+.wt-table td strong { color: var(--ink); }
+ol.step-list { counter-reset: step; list-style: none; margin-left: 0; }
+ol.step-list > li { counter-increment: step; position: relative; padding-left: 34px; }
+ol.step-list > li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute; left: 0; top: 1px;
+  font-family: "IBM Plex Serif", Georgia, serif; font-weight: 700;
+  font-size: 14px; color: var(--gold);
+}
+.wt-nav {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 40px 0 10px; padding-top: 22px; border-top: 1px solid var(--line-soft);
+}
+.wt-nav a {
+  text-decoration: none; font-weight: 600; font-size: 15px; color: var(--navy-deep);
+  border-bottom: 2px solid var(--gold); padding-bottom: 2px; min-height: 44px;
+  display: inline-flex; align-items: center;
+}
+.wt-nav a:hover { color: var(--accent); }
+@media (max-width: 900px) {
+  .wt-table { display: block; overflow-x: auto; }
+}
+@media (max-width: 640px) {
+  pre.code { font-size: 12.5px; padding: 14px; }
+  .flag-callout code { font-size: 13.5px; }
+  .wt-content h2 { font-size: 21px; }
+}

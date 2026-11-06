@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exif Puzzle CTF Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="Exif Puzzle CTF walkthrough — the hidden flag is concealed in a JPEG's comment metadata, recovered with ExifTool.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-exif-puzzle.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · Forensics</span>
+      <div class="gold-rule"></div>
+      <h1>Exif Puzzle — CTF Walkthrough</h1>
+      <p class="lede">Extract the hidden flag from the image's comment metadata.</p>
+    </div>
+    <section class="block wt-content">
+      <div class="note anim d2"><strong>About this write-up.</strong> This is a short walkthrough: the original document is mostly screenshots, so all of its text is carried over here in full — the screenshots themselves could not be carried over. Nothing has been added to pad it out.</div>
+
+      <h2 class="anim d2">1. Why metadata?</h2>
+      <p>The challenge description specifically says the secret is concealed in comment metadata. That makes metadata inspection the first step; there is no need to perform steganography or pixel analysis first.</p>
+
+      <h2>2. Inspect the JPEG with ExifTool</h2>
+      <p>On Kali Linux, place the image in your working directory and run:</p>
+      <pre class="code"><code>exiftool whoami.jpg</code></pre>
+      <p>ExifTool prints metadata fields stored in the JPEG. The field we care about is Comment.</p>
+
+      <h2>3. Extract only the Comment field</h2>
+      <p>To avoid unrelated metadata, query the comment directly:</p>
+      <pre class="code"><code>exiftool -Comment whoami.jpg</code></pre>
+      <p>The uploaded JPEG's comment metadata contains:</p>
+      <div class="flag-callout"><span class="flag-label">Flag</span><code>FLAG{Ex1f_M3tad@t@_Ch@mp10n}</code></div>
+
+      <h2>4. Submit the flag</h2>
+      <p>Copy the value exactly as displayed, including capitalization, braces, numbers, and special characters.</p>
+      <pre class="code"><code>FLAG{Ex1f_M3tad@t@_Ch@mp10n}</code></pre>
+
+      <h2>What happened technically?</h2>
+      <p>JPEG files can contain metadata segments in addition to image pixels. One such segment is a JPEG COM (Comment) segment. The challenge author stored the flag there. ExifTool parses these metadata structures and exposes the embedded comment, so the flag can be recovered without modifying the image.</p>
+
+      <h2>Quick command summary</h2>
+      <table class="wt-table">
+        <tr><th>Purpose</th><th>Command</th></tr>
+        <tr><td>Show all metadata</td><td><code>exiftool whoami.jpg</code></td></tr>
+        <tr><td>Show only comment</td><td><code>exiftool -Comment whoami.jpg</code></td></tr>
+      </table>
+      <div class="wt-nav">
+        <a href="walkthrough-heap-overflow.html">← Heap Overflow CTF</a>
+        <a href="walkthroughs.html">All walkthroughs →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>
