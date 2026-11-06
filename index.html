@@ -8,7 +8,7 @@
   <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -26,58 +26,83 @@
   </div>
 </header>
 <main>
-  <div class="wrap">
-    <section class="hero">
+  <section class="hero">
+    <canvas id="net" aria-hidden="true"></canvas>
+    <div class="wrap hero-inner">
       <div class="hero-grid">
         <div>
-          <span class="status-pill"><span class="status-dot"></span>Open to penetration testing and red team roles</span>
-          <h1>Ahmed Vasil</h1>
-          <p class="role">Aspiring Penetration Tester</p>
-          <p class="summary">I test systems the way an attacker would, so they can be fixed before a real attack.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="projects.html">View projects</a>
-            <a class="btn btn-ghost" href="contact.html">Get in touch</a>
+          <span class="status-pill anim d1"><span class="status-dot"></span>Open to penetration testing and red team roles</span>
+          <span class="eyebrow anim d2">Penetration Tester · Web · API · Network</span>
+          <h1 class="anim d2">Ahmed Vasil</h1>
+          <p class="role anim d3">Aspiring Penetration Tester</p>
+          <p class="terminal anim d3"><span class="prompt">ahamad@vasil:~$</span> whoami<span class="cursor" aria-hidden="true"></span></p>
+          <p class="manifesto anim d4">“I test systems the way an attacker would, so they can be fixed before a real attack.”</p>
+          <div class="pill-row anim d4">
+            <span class="pill">Penetration Tester</span>
+            <span class="pill">Red Team Operator</span>
           </div>
-          <div class="hero-facts">
-            <div class="fact"><div class="fact-label">Target roles</div><div class="fact-value">Penetration Tester · Red Team Operator</div></div>
-            <div class="fact"><div class="fact-label">Focus</div><div class="fact-value">Offensive Security · Web App Security</div></div>
-            <div class="fact"><div class="fact-label">Based in</div><div class="fact-value">Narasimharajapura, Karnataka</div></div>
+          <div class="hero-actions anim d5">
+            <a class="btn btn-primary" href="projects.html">View Projects</a>
+            <a class="btn btn-ghost" href="contact.html">Get in Touch</a>
           </div>
         </div>
-        <div>
-          <div class="photo-frame">
+        <div class="stamp anim-fade d3">
+          <div class="stamp-frame">
             <picture><source srcset="assets/images/profile/ahmed-vasil.webp" type="image/webp"><img src="assets/images/profile/ahmed-vasil-profile.png" alt="Ahmed Vasil"></picture>
-            <div class="photo-caption"><strong>Ahmed Vasil</strong><span>Aspiring Penetration Tester</span></div>
           </div>
+          <p class="stamp-caption">Ahmed Vasil · Penetration Tester</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
+  <section class="num-band" aria-label="At a glance">
+    <div class="wrap num-band-inner">
+      <div class="num-item anim d1"><div class="num">0<em>2</em></div><div class="num-cap">Flagship projects</div></div>
+      <div class="num-item anim d2"><div class="num">6<em>/6</em></div><div class="num-cap">TryHackMe Halloween Hunt stamps</div></div>
+      <div class="num-item anim d3"><div class="num">0<em>3</em></div><div class="num-cap">Certifications &amp; courses</div></div>
+      <div class="num-item anim d4"><div class="num">0<em>4</em></div><div class="num-cap">Languages spoken</div></div>
+    </div>
+  </section>
+  <div class="wrap">
     <section class="block">
-      <h2>Explore</h2>
+      <span class="eyebrow"><span class="section-no">01</span>The map</span>
+      <h2>Explore the portfolio</h2>
       <p class="sub">Who I am, what I built, and how to reach me.</p>
-      <div class="grid-3">
-        <article class="card">
+      <div class="grid-5">
+        <a class="card anim d1" href="about.html">
           <p class="meta">About</p>
-          <h3>Who I am</h3>
+          <h4>Who I am</h4>
           <p>An early-career penetration tester from Narasimharajapura, Karnataka.</p>
-          <a class="card-link" href="about.html">About →</a>
-        </article>
-        <article class="card">
+          <span class="card-link">About →</span>
+        </a>
+        <a class="card anim d2" href="projects.html">
           <p class="meta">Projects</p>
-          <h3>What I built</h3>
-          <p>AdversaryForge, Ferrow Dynamics / BlackVault, and an ML-based intrusion detection system.</p>
-          <a class="card-link" href="projects.html">Projects →</a>
-        </article>
-        <article class="card">
+          <h4>What I built</h4>
+          <p>AdversaryForge, BlackVault, and an ML-based intrusion detection system.</p>
+          <span class="card-link">Projects →</span>
+        </a>
+        <a class="card anim d3" href="skills.html">
           <p class="meta">Skills</p>
-          <h3>Tools and techniques</h3>
-          <p>Offensive security, Nmap, Burp Suite, Metasploit, Linux, networking, Python and Bash.</p>
-          <a class="card-link" href="skills.html">Skills →</a>
-        </article>
+          <h4>Tools and techniques</h4>
+          <p>Nmap, Burp Suite, Metasploit, Linux, networking, Python and Bash.</p>
+          <span class="card-link">Skills →</span>
+        </a>
+        <a class="card anim d4" href="journey.html">
+          <p class="meta">Journey</p>
+          <h4>How I got here</h4>
+          <p>Training, an internship, and certifications — in order.</p>
+          <span class="card-link">Journey →</span>
+        </a>
+        <a class="card anim d5" href="contact.html">
+          <p class="meta">Contact</p>
+          <h4>Get in touch</h4>
+          <p>Email, GitHub and LinkedIn — the fastest way is email.</p>
+          <span class="card-link">Contact →</span>
+        </a>
       </div>
-      <div class="strip">
+      <div class="strip anim d2">
         <div>
-          <h2>Looking for my first pentesting role</h2>
+          <h3>Looking for my first pentesting role</h3>
           <p>Training, experience and certifications, in order — see the journey.</p>
         </div>
         <a class="btn" href="journey.html">View journey</a>
@@ -86,6 +111,7 @@
   </div>
 </main>
 <footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
   <div class="wrap footer-inner">
     <span class="f-name">Ahmed Vasil</span>
     <span class="f-role">Aspiring Penetration Tester</span>
@@ -93,5 +119,6 @@
   </div>
   <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
 </footer>
+<script src="js/network.js" defer></script>
 </body>
 </html>
