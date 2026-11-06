@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects | Ahmed Vasil</title>
+  <meta name="description" content="Projects by Ahmed Vasil — AdversaryForge, Ferrow Dynamics / BlackVault, and an ML-based intrusion detection system.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/projects.html">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html">Ahmed Vasil<span>Aspiring Penetration Tester</span></a>
+    <nav class="main" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html" aria-current="page">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <h1>Projects</h1>
+  <p class="lead">Selected hands-on work — labs and systems I built and tested myself.</p>
+
+  <article class="card">
+    <h2>AdversaryForge</h2>
+    <p class="meta">Enterprise adversary emulation and purple-team validation lab · Phases 1–10 complete (lab implementation; live AD validation still pending)</p>
+    <p>An authorized adversary-emulation and penetration-testing lab for a fictional enterprise, combining a segmented Docker platform (corporate portal, FastAPI API, PostgreSQL, internal Linux service) with a guarded Active Directory deployment foundation and a Python assessment engine.</p>
+    <ul class="tight">
+      <li>Attack-path engine: web entry → API-001 BOLA → Linux catalogue → document metadata check, scope-enforced at every step.</li>
+      <li>9 JSON detection rules; 4 fire in the test slice.</li>
+      <li>Purple-team validation: TP 4 / FP 0 / FN 0.</li>
+      <li>HTML and Markdown report from a real run: 1 validated high finding — BOLA, API-001, CWE-639, OWASP API1:2023, MITRE T1213.</li>
+      <li>44 new tests pass.</li>
+    </ul>
+    <p><a href="https://github.com/vasilahmed744/AdversaryForge">View on GitHub →</a></p>
+  </article>
+
+  <article class="card">
+    <h2>Ferrow Dynamics / BlackVault</h2>
+    <p class="meta">Custom lab and CTF environment</p>
+    <p>A custom multi-stage CTF virtual machine and lab environment for practising offensive security end to end.</p>
+  </article>
+
+  <article class="card">
+    <h2>ML-based Intrusion Detection System</h2>
+    <p class="meta">Machine learning project</p>
+    <p>An intrusion detection system using machine learning, built during a data science internship.</p>
+  </article>
+</main>
+<footer class="site">
+  <div class="wrap">
+    <span>© Ahmed Vasil</span>
+    <span><a href="https://github.com/vasilahmed744">GitHub</a> · <a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+</footer>
+</body>
+</html>
