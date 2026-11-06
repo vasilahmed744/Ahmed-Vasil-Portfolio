@@ -6,37 +6,56 @@
   <title>About | Ahmed Vasil</title>
   <meta name="description" content="About Ahmed Vasil — aspiring penetration tester from Narasimharajapura, Chikkamagaluru, Karnataka, Diploma in Computer Science and Engineering, focused on offensive security.">
   <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/about.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:wght@500;600;700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<header class="site">
-  <div class="wrap">
-    <a class="brand" href="index.html">Ahmed Vasil<span>Aspiring Penetration Tester</span></a>
-    <nav class="main" aria-label="Main navigation">
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
       <a href="index.html">Home</a>
-      <a href="about.html" aria-current="page">About</a>
+      <a href="about.html" class="active">About</a>
       <a href="projects.html">Projects</a>
       <a href="skills.html">Skills</a>
       <a href="journey.html">Journey</a>
-      <a href="contact.html">Contact</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
     </nav>
   </div>
 </header>
 <main>
-  <h1>About</h1>
-  <p class="lead">I am an early-career penetration tester from Narasimharajapura, Chikkamagaluru, Karnataka. I learn by doing — building labs, solving CTFs, and testing web applications hands-on.</p>
-  <p>My work is offensive security: finding weaknesses in web applications and systems, proving them safely, and explaining clearly how to fix them.</p>
-  <h2>Education</h2>
-  <p><strong>Diploma in Computer Science &amp; Engineering</strong><br>
-  Sahyadri Polytechnic, Thirthahalli, 2023–2026 · CGPA 6.27</p>
-  <h2>Languages</h2>
-  <p>Kannada, Hindi, English, Malayalam.</p>
-</main>
-<footer class="site">
   <div class="wrap">
-    <span>© Ahmed Vasil</span>
-    <span><a href="https://github.com/vasilahmed744">GitHub</a> · <a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+    <div class="page-head">
+      <div class="rule"></div>
+      <h1>About</h1>
+      <p class="lede">An early-career penetration tester from Narasimharajapura, Chikkamagaluru, Karnataka.</p>
+    </div>
+    <section class="block">
+      <div class="about-grid">
+        <div class="about-photo">
+          <picture><source srcset="assets/images/profile/ahmed-vasil.webp" type="image/webp"><img src="assets/images/profile/ahmed-vasil-profile.png" alt="Ahmed Vasil"></picture>
+        </div>
+        <div class="about-text">
+          <p>I am an early-career penetration tester from Narasimharajapura, Chikkamagaluru, Karnataka. I learn by doing — building labs, solving CTFs, and testing web applications hands-on.</p>
+          <p>My work is offensive security: finding weaknesses in web applications and systems, proving them safely, and explaining clearly how to fix them.</p>
+          <table class="info-table">
+            <tr><th>Education</th><td><strong>Diploma in Computer Science &amp; Engineering</strong><br>Sahyadri Polytechnic, Thirthahalli, 2023–2026 · CGPA 6.27</td></tr>
+            <tr><th>Languages</th><td>Kannada, Hindi, English, Malayalam.</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
   </div>
+</main>
+<footer>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
 </footer>
 </body>
 </html>
