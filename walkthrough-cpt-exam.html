@@ -42,12 +42,13 @@
       </table>
       <div class="note anim d2"><strong>Evidence note.</strong> This report is reconstructed strictly from the supplied exam terminal logs and final-answer screenshots. Where the logs begin after an action (notably the exact GitLab UI/pipeline edit that produced the Lab-2 reverse shell), the report states that limitation instead of inventing a missing command.</div>
       <h2 class="anim d2">Verified flags</h2>
+      <p class="anim d2">All four flags were captured during the exam. The values are withheld here because this is a live certification exam.</p>
       <table class="wt-table anim d2">
         <tr><th>Question</th><th>Target</th><th>Objective</th><th>Verified flag</th></tr>
-        <tr><td>Q26</td><td>10.10.10.0/24</td><td>Root</td><td><code>ctf{a736a13bf8a3fdd0638bc05651e3d1e8}</code></td></tr>
-        <tr><td>Q27</td><td>10.10.11.0/24</td><td>User</td><td><code>ctf{e6d52907f6aec03d0bfe0092259a1be2}</code></td></tr>
-        <tr><td>Q28</td><td>10.10.11.0/24</td><td>Root</td><td><code>ctf{3ebfef552258152cd6f9989a5cdb5d72}</code></td></tr>
-        <tr><td>Q29</td><td>10.10.10.0/24</td><td>User</td><td><code>ctf{1ad70b3cba4be4c86fe92521b9e79246}</code></td></tr>
+        <tr><td>Q26</td><td>10.10.10.0/24</td><td>Root</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q27</td><td>10.10.11.0/24</td><td>User</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q28</td><td>10.10.11.0/24</td><td>Root</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q29</td><td>10.10.10.0/24</td><td>User</td><td><code>ctf{ withheld }</code></td></tr>
       </table>
 
       <h2 class="anim d3">1. Machine A — 10.10.11.10 (exam-1-lab-1)</h2>
@@ -70,7 +71,7 @@ ssh -i id_rsa user@10.10.11.10</code></pre>
       <h3>1.4 User flag — Q27</h3>
       <pre class="code"><code>ls -la
 cat flag.txt</code></pre>
-      <div class="flag-callout"><span class="flag-label">Flag — Q27 · User · 10.10.11.0/24</span><code>ctf{e6d52907f6aec03d0bfe0092259a1be2}</code></div>
+      <div class="flag-callout"><span class="flag-label">Flag — Q27 · User · 10.10.11.0/24</span><code>ctf{ withheld }</code></div>
       <p>The user flag was stored directly in /home/user/flag.txt. The same home directory also contained gitlab-credentials.txt.</p>
       <h3>1.5 Local privilege-escalation enumeration</h3>
       <pre class="code"><code>cat gitlab-credentials.txt
@@ -85,7 +86,7 @@ cd /root
 ls -la
 cat flag.txt</code></pre>
       <p>The <code class="inline">-p</code> option preserved the effective privileged identity when find executed the shell. The prompt changed to #, and /root became readable.</p>
-      <div class="flag-callout"><span class="flag-label">Flag — Q28 · Root · 10.10.11.0/24</span><code>ctf{3ebfef552258152cd6f9989a5cdb5d72}</code></div>
+      <div class="flag-callout"><span class="flag-label">Flag — Q28 · Root · 10.10.11.0/24</span><code>ctf{ withheld }</code></div>
 
       <h2>2. Machine B — 10.10.10.10 (exam-1-lab-2)</h2>
       <p>This machine initially exposed only SSH externally. The supplied evidence shows that the working foothold was obtained through the GitLab/CI relationship discovered on Machine A: the recovered aliza GitLab credentials were used in the exam workflow, and a CI job on Machine B produced a reverse shell as gitlab-runner.</p>
@@ -111,7 +112,7 @@ cd /home/gitlab-runner
 ls -la
 cat flag.txt</code></pre>
       <p>The shell ran as gitlab-runner on exam-1-lab-2. Crucially, <code class="inline">id</code> showed membership in group 995(docker). The runner's home directory contained the user flag.</p>
-      <div class="flag-callout"><span class="flag-label">Flag — Q29 · User · 10.10.10.0/24</span><code>ctf{1ad70b3cba4be4c86fe92521b9e79246}</code></div>
+      <div class="flag-callout"><span class="flag-label">Flag — Q29 · User · 10.10.10.0/24</span><code>ctf{ withheld }</code></div>
       <h3>2.4 Privilege-escalation discovery: Docker group</h3>
       <pre class="code"><code>sudo -l
 find / -perm -4000 -type f 2&gt;/dev/null
@@ -146,7 +147,7 @@ docker images</code></pre>
 /bin/busybox ls -la /host/root
 /bin/busybox cat /host/root/flag.txt</code></pre>
       <p>The container ran with UID/GID 0 and the host root filesystem was mounted read-only at /host. Because the minimal image did not install BusyBox applet symlinks, commands were invoked explicitly as <code class="inline">/bin/busybox &lt;applet&gt;</code>. The host's root-only flag was then readable at /host/root/flag.txt.</p>
-      <div class="flag-callout"><span class="flag-label">Flag — Q26 · Root · 10.10.10.0/24</span><code>ctf{a736a13bf8a3fdd0638bc05651e3d1e8}</code></div>
+      <div class="flag-callout"><span class="flag-label">Flag — Q26 · Root · 10.10.10.0/24</span><code>ctf{ withheld }</code></div>
 
       <h2>3. Complete successful attack chain</h2>
       <p><strong>Machine A:</strong> network scan → Apache application on 8000 → LFI through ?page= → read /etc/passwd → identify user → disclose /home/user/.ssh/id_rsa → SSH → user flag → enumerate SUID files → abuse SUID find → root shell → root flag.</p>
@@ -164,12 +165,12 @@ docker images</code></pre>
       <h2>5. Final flag reference</h2>
       <table class="wt-table">
         <tr><th>Question</th><th>Target</th><th>Objective</th><th>Verified flag</th></tr>
-        <tr><td>Q26</td><td>10.10.10.0/24</td><td>Root</td><td><code>ctf{a736a13bf8a3fdd0638bc05651e3d1e8}</code></td></tr>
-        <tr><td>Q27</td><td>10.10.11.0/24</td><td>User</td><td><code>ctf{e6d52907f6aec03d0bfe0092259a1be2}</code></td></tr>
-        <tr><td>Q28</td><td>10.10.11.0/24</td><td>Root</td><td><code>ctf{3ebfef552258152cd6f9989a5cdb5d72}</code></td></tr>
-        <tr><td>Q29</td><td>10.10.10.0/24</td><td>User</td><td><code>ctf{1ad70b3cba4be4c86fe92521b9e79246}</code></td></tr>
+        <tr><td>Q26</td><td>10.10.10.0/24</td><td>Root</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q27</td><td>10.10.11.0/24</td><td>User</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q28</td><td>10.10.11.0/24</td><td>Root</td><td><code>ctf{ withheld }</code></td></tr>
+        <tr><td>Q29</td><td>10.10.10.0/24</td><td>User</td><td><code>ctf{ withheld }</code></td></tr>
       </table>
-      <p>All four values above were cross-checked against the supplied exam-answer screenshots and terminal logs.</p>
+      <p>All four flags were captured and cross-checked against the supplied exam-answer screenshots and terminal logs; the values are withheld because this is a live exam.</p>
       <div class="wt-nav">
         <a href="walkthroughs.html">← All walkthroughs</a>
         <a href="walkthrough-nfs.html">Next: NFS CTF →</a>
